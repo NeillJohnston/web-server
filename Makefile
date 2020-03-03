@@ -1,5 +1,6 @@
 export BIN = $(shell pwd)/bin
 SERVER_EXECUTABLE = out/server
+SERVER_ROOT = src/server
 
 all: $(SERVER_EXECUTABLE)
 
@@ -8,4 +9,9 @@ $(SERVER_EXECUTABLE): objects
 
 .PHONY: objects
 objects:
-	$(MAKE) -C src
+	$(MAKE) -C $(SERVER_ROOT)
+
+.PHONY: runtest
+runtest:
+	gcc -I test $(UNIT)/test.c -o test/$(subst /,_,$(UNIT)).o
+	./test/$(subst /,_,$(UNIT)).o
