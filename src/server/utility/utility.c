@@ -1,10 +1,10 @@
 #include "utility.h"
 
-int mod(int a, int m) {
+#include <common_types.h>
+
+Int mod(Int a, Int m) {
 	a = a % m;
 
-	if (a >= 0)
-		return a;
-	else
-		return a + m;
+	if (a >= 0) return a;
+	else return a + m;
 }

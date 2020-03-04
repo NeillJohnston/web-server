@@ -13,5 +13,5 @@ objects:
 
 .PHONY: runtest
 runtest:
-	gcc -I test $(UNIT)/test.c -o test/$(subst /,_,$(UNIT)).o
-	./test/$(subst /,_,$(UNIT)).o
+	gcc -I include $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
+	./test/$(subst .,_,$(subst /,_,$(UNIT))).o

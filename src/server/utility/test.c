@@ -1,5 +1,6 @@
-#include <underscore.h>
 #include "utility.c"
+
+#include <underscore.h>
 
 UNIT(mod) {
 	SPEC("yields correct answers for non-negative input") {
