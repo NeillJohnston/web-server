@@ -67,6 +67,11 @@ Defines a unit-test function. "name" must be unique within the file.
 #define UNIT(name) void _unit_##name(char* _name, int* _failed_cumulative)
 
 /*
+Just an alias for main, since everything else already doesn't look like C.
+*/
+#define DRIVER int main()
+
+/*
 Defines a specification of the unit. "spec" should describe what functionality
 the enclosed tests are meant to prove.
 
