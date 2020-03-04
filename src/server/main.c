@@ -1,7 +1,9 @@
+#include "server.h"
+
 #include <common_types.h>
 #include <stdio.h>
 
 ErrorCode main(int argc, char* argv[]) {
-	printf("%s\n", argv[argc-1]);
+	run_server((ServerOptions) {});
 	return 0;
 }
