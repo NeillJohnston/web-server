@@ -16,5 +16,9 @@ typedef size_t Size;
 // Floating-point types
 typedef double Double;
 
+// Unix types (I'm pretty sure these are all going to be ints)
+typedef pid_t Pid;
+typedef int FileDescriptor;
+
 // Misc. types
 typedef void Void;
