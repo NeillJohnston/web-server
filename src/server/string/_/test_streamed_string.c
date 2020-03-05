@@ -43,7 +43,7 @@ static bool all_xs(StreamedString* string) {
 
 UNIT(read_streamed_string) {
 	SPEC("reads small (<= NODE_SIZE) strings") {
-		FileDescriptor file = open("src/server/string/_test/23B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/23B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 23B.txt");
 
 		StreamedString string;
@@ -55,7 +55,7 @@ UNIT(read_streamed_string) {
 		DONE;
 	}
 	SPEC("reads large (> NODE_SIZE) strings") {
-		FileDescriptor file = open("src/server/string/_test/4098B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 4098B.txt");
 
 		StreamedString string;
@@ -67,7 +67,7 @@ UNIT(read_streamed_string) {
 		DONE;
 	}
 	SPEC("reads data correctly") {
-		FileDescriptor file = open("src/server/string/_test/xs.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/xs.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open xs.txt");
 
 		StreamedString string;
@@ -78,8 +78,8 @@ UNIT(read_streamed_string) {
 		DONE;
 	}
 	SPEC("reads 0-length strings") {
-		FileDescriptor file = open("src/server/string/_test/0B.txt", O_RDONLY);
-		if (file == -1) LEAVE("could not open xs.txt");
+		FileDescriptor file = open("src/server/string/_/0B.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open 0B.txt");
 
 		StreamedString string;
 		OKAY(read_streamed_string(file, &string));
@@ -92,7 +92,7 @@ UNIT(read_streamed_string) {
 
 UNIT(free_streamed_string) {
 	SPEC("frees small strings without error") {
-		FileDescriptor file = open("src/server/string/_test/23B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/23B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 23B.txt");
 
 		StreamedString string;
@@ -104,7 +104,7 @@ UNIT(free_streamed_string) {
 		DONE;
 	}
 	SPEC("frees large strings without error") {
-		FileDescriptor file = open("src/server/string/_test/4098B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 4098B.txt");
 
 		StreamedString string;

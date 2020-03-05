@@ -111,7 +111,7 @@ Assert that r results in no error code (zero return).
 */
 #define OKAY(r) { bool p = (r) == 0; _test_okay_result(#r, !p); if (!p) { ++_failed; ++(*_failed_cumulative); }}
 
-#define LEAVE(msg) { _leave(msg); break; }
+#define LEAVE(msg) { ++_failed; ++(*_failed_cumulative); _leave(msg); break; }
 
 /*
 Control code macros for output and pretty printer functions.

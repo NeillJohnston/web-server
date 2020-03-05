@@ -40,6 +40,11 @@ UNIT(init_server) {
 	}
 }
 
+// Needs a stub just so it can compile
+ErrorCode spawn_worker(Socket connection, Pid* worker_pid) {
+	return 0;
+}
+
 DRIVER {
 	TEST(init_server);
 }

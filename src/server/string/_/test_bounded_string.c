@@ -8,7 +8,7 @@
 
 UNIT(bounded_from_streamed_string) {
 	SPEC("converts small strings") {
-		FileDescriptor file = open("src/server/string/_test/23B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/23B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 23B.txt");
 		StreamedString string;
 		if (read_streamed_string(file, &string) != 0) LEAVE("could not read streamed string");
@@ -22,7 +22,7 @@ UNIT(bounded_from_streamed_string) {
 		DONE;
 	}
 	SPEC("converts large strings") {
-		FileDescriptor file = open("src/server/string/_test/4098B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 4098B.txt");
 		StreamedString string;
 		if (read_streamed_string(file, &string) != 0) LEAVE("could not read streamed string");
@@ -36,7 +36,7 @@ UNIT(bounded_from_streamed_string) {
 		DONE;
 	}
 	SPEC("converts 0-length strings") {
-		FileDescriptor file = open("src/server/string/_test/0B.txt", O_RDONLY);
+		FileDescriptor file = open("src/server/string/_/0B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 0B.txt");
 		StreamedString string;
 		if (read_streamed_string(file, &string) != 0) LEAVE("could not read streamed string");
