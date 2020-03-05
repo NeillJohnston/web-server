@@ -5,9 +5,9 @@
 #include <underscore.h>
 #include <unistd.h>
 
-static int count_nodes(StreamedString* string) {
+static UInt count_nodes(StreamedString* string) {
 	StreamedStringNode* current = &string->head;
-	int count = 0;
+	UInt count = 0;
 
 	while (current != NULL) {
 		++count;
@@ -17,9 +17,9 @@ static int count_nodes(StreamedString* string) {
 	return count;
 }
 
-static int count_bytes(StreamedString* string) {
+static UInt count_bytes(StreamedString* string) {
 	StreamedStringNode* current = &string->head;
-	int count = 0;
+	UInt count = 0;
 
 	while (current != NULL) {
 		count += current->n_bytes;
@@ -29,15 +29,25 @@ static int count_bytes(StreamedString* string) {
 	return count;
 }
 
+static bool all_xs(StreamedString* string) {
+	StreamedStringNode* current = &string->head;
+	
+	while (current != NULL) {
+		for (Size i = 0; i < current->n_bytes; ++i)
+			if (current->data[i] != 'x')
+				return false;
+		current = current->next;
+	}
+
+	return true;
+}
+
 UNIT(read_streamed_string) {
-	// Initial tests to make sure strings can be read -
-	// We'll test harder when we can actually have the string data
 	SPEC("reads small (<= NODE_SIZE) strings") {
 		FileDescriptor file = open("src/server/string/_test/23B.txt", O_RDONLY);
 		if (file == -1) LEAVE("could not open 23B.txt");
 
 		StreamedString string;
-
 		OKAY(read_streamed_string(file, &string));
 		ASSERT(count_nodes(&string) == 1);
 		ASSERT(count_bytes(&string) == 23);
@@ -50,10 +60,47 @@ UNIT(read_streamed_string) {
 		if (file == -1) LEAVE("could not open 4098B.txt");
 
 		StreamedString string;
-
 		OKAY(read_streamed_string(file, &string));
 		ASSERT(count_nodes(&string) > 1);
 		ASSERT(count_bytes(&string) == 4098);
+
+		close(file);
+		DONE;
+	}
+	SPEC("reads data correctly") {
+		FileDescriptor file = open("src/server/string/_test/xs.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open xs.txt");
+
+		StreamedString string;
+		OKAY(read_streamed_string(file, &string));
+		ASSERT(all_xs(&string));
+
+		close(file);
+		DONE;
+	}
+}
+
+UNIT(free_streamed_string) {
+	SPEC("frees small strings without error") {
+		FileDescriptor file = open("src/server/string/_test/23B.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open 23B.txt");
+
+		StreamedString string;
+		OKAY(read_streamed_string(file, &string));
+		free_streamed_string(&string);
+		// If there's an error the program will just crash
+
+		close(file);
+		DONE;
+	}
+	SPEC("frees large strings without error") {
+		FileDescriptor file = open("src/server/string/_test/4098B.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open 4098B.txt");
+
+		StreamedString string;
+		OKAY(read_streamed_string(file, &string));
+		free_streamed_string(&string);
+		// If there's an error the program will just crash
 
 		close(file);
 		DONE;
@@ -62,4 +109,5 @@ UNIT(read_streamed_string) {
 
 DRIVER {
 	TEST(read_streamed_string);
+	TEST(free_streamed_string);
 }

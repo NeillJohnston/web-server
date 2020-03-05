@@ -3,8 +3,13 @@
 #include "bounded_string.h"
 
 #include <common_types.h>
+#include <unistd.h>
+#include <limits.h>
 
-#define NODE_SIZE 1024
+// TODO: NODE_SIZE is set to the virtual page size (on dev computer)
+// 1. Find out if this can be determined at compile-time, for other machines
+// 2. Find out if this is actually helps memory
+#define NODE_SIZE (0x1000)
 
 /*
 Represents a (node of a) potentially infinitely-long string that gets read
@@ -52,7 +57,7 @@ ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string);
 Free the memory allocated to a streamed string.
 It is assumed that the head node has not been dynamically allocated.
 */
-ErrorCode free_streamed_string(StreamedString* string);
+Void free_streamed_string(StreamedString* string);
 
 /*
 Make a BoundedString from a StreamedString.

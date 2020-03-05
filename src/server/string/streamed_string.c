@@ -5,8 +5,6 @@
 #include <unistd.h>
 
 ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
-	typedef ssize_t SSize;
-
 	const Size data_size = sizeof string->head.data;
 	StreamedStringNode* current = &string->head;
 
@@ -28,4 +26,15 @@ ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
 	}
 	
 	return 0;
+}
+
+// TODO: Finish testing with Valgrind or something
+Void free_streamed_string(StreamedString* string) {
+	StreamedStringNode* current = (string->head).next;
+
+	while (current != NULL) {
+		StreamedStringNode* next = current->next;
+		free(current);
+		current = next;
+	}
 }
