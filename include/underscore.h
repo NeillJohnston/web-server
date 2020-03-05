@@ -78,12 +78,12 @@ the enclosed tests are meant to prove.
 This macro must be followed by a block (of tests) where the last line is a
 single DONE.
 */
-#define SPEC(spec) { char* _spec = spec; int _failed = 0; _spec_header(_name, _spec);
+#define SPEC(spec) { char* _spec = spec; int _failed = 0; _spec_header(_name, _spec); do
 
 /*
 Finishes a SPEC.
 */
-#define DONE _spec_result(_failed); }
+#define DONE _spec_result(_failed); } while(0)
 
 /*
 Runs the specs within a unit. "name" should be one of the names declared in a
@@ -111,6 +111,8 @@ Assert that r results in no error code (zero return).
 */
 #define OKAY(r) { bool p = (r) == 0; _test_okay_result(#r, !p); if (!p) { ++_failed; ++(*_failed_cumulative); }}
 
+#define LEAVE(msg) { _leave(msg); break; }
+
 /*
 Control code macros for output and pretty printer functions.
 
@@ -127,7 +129,7 @@ void _unit_header(char* name) {
 }
 
 void _spec_header(char* name, char* spec) {
-	printf(BLUE "\tSpec: \"%s %s\"" "\n", name, spec);
+	printf(BLUE "\tSpec: \"%s %s\"" WHITE "\n", name, spec);
 }
 
 void _test_assert_result(char* test, bool failed) {
@@ -180,4 +182,8 @@ void _unit_result(int failed) {
 		printf(RED "failed %d tests" WHITE "\n", failed);
 	else
 		printf(GREEN "passed all tests" WHITE "\n");
+}
+
+void _leave(char* message) {
+	printf(RED "\t! Leaving spec: " WHITE "%s\n", message);
 }
