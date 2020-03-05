@@ -1,14 +1,15 @@
 export BIN = $(shell pwd)/bin
+export INCLUDE = $(shell pwd)/include
 SERVER_EXECUTABLE = out/server
 SERVER_ROOT = src/server
 
 all: $(SERVER_EXECUTABLE)
 
-$(SERVER_EXECUTABLE): objects
-	gcc $(wildcard bin/*.o) -o $(SERVER_EXECUTABLE)
+$(SERVER_EXECUTABLE): server_objects
+	gcc $(shell ls bin/*.o) -o $(SERVER_EXECUTABLE)
 
-.PHONY: objects
-objects:
+.PHONY: server_objects
+server_objects:
 	$(MAKE) -C $(SERVER_ROOT)
 
 .PHONY: runtest

@@ -116,7 +116,7 @@ For loop are great for making code succinct, but they're also three statements i
 
 ### Names
 
-Clear, duh.
+Keep them clear, duh.
 
 Very short names (1 or so letters) can be used in three scenarios:
 
@@ -141,3 +141,19 @@ Int greatest_common_factor(Int a, Int b) {
 In general, no.
 
 If a global variable _must_ be used, then it should encapsulate the program state in some way - so make a state `struct` that holds everything needed. This way the namespace gains only one item, and autocomplete will know how to handle it. This also makes it easier to capture the program state, if desired.
+
+## Functions
+
+Each function must be unit-tested. This means that program behavior should be split into functions that can _at least_ be unit-tested, and perhaps more splits are required - but never less.
+
+If a function might error for any reason, it should return an error code (typically of type `ErrorCode`). Other return values should be write-back arguments at the end of the argument list. This prevents contrived special values representing errors from being made, and ensures that data written back is valid:
+
+```C
+// Instantiates a Baz with bar1 and bar2.
+// Returns an error code if necessary, and writes back to baz
+ErrorCode foo(Bar bar1, Bar bar2, Baz* baz) {
+	// ...
+}
+```
+
+Don't ignore error codes, obviously - handle them appropriately and uniquely. Uptime is important.
