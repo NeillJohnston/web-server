@@ -9,9 +9,10 @@ typedef __uint32_t UInt;
 typedef __int64_t Long;
 typedef __uint64_t ULong;
 
-// Variable-size integral types
+// Platform-dependent integral types
 typedef int ErrorCode;
 typedef size_t Size;
+typedef ssize_t SSize;
 
 // Floating-point types
 typedef double Double;
