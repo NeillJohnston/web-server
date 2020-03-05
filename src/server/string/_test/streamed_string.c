@@ -1,7 +1,6 @@
 #include "../streamed_string.c"
 
 #include <fcntl.h>
-#include <stdio.h>
 #include <underscore.h>
 #include <unistd.h>
 
@@ -22,7 +21,7 @@ static UInt count_bytes(StreamedString* string) {
 	UInt count = 0;
 
 	while (current != NULL) {
-		count += current->n_bytes;
+		count += current->size;
 		current = current->next;
 	}
 
@@ -33,7 +32,7 @@ static bool all_xs(StreamedString* string) {
 	StreamedStringNode* current = &string->head;
 	
 	while (current != NULL) {
-		for (Size i = 0; i < current->n_bytes; ++i)
+		for (Size i = 0; i < current->size; ++i)
 			if (current->data[i] != 'x')
 				return false;
 		current = current->next;
@@ -76,6 +75,17 @@ UNIT(read_streamed_string) {
 		ASSERT(all_xs(&string));
 
 		close(file);
+		DONE;
+	}
+	SPEC("reads 0-length strings") {
+		FileDescriptor file = open("src/server/string/_test/0B.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open xs.txt");
+
+		StreamedString string;
+		OKAY(read_streamed_string(file, &string));
+		ASSERT(count_nodes(&string) == 1);
+		ASSERT(count_bytes(&string) == 0);
+
 		DONE;
 	}
 }

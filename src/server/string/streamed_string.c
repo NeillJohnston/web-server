@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
@@ -10,17 +11,19 @@ ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
 
 	while (true) {
 		SSize n_bytes = read(stream, current->data, data_size);
-		
+
 		if (n_bytes == -1) return -1;
 		else if (n_bytes < data_size) {
 			current->next = NULL;
-			current->n_bytes = n_bytes;
+			current->size = n_bytes;
 			break;
 		}
 		else {
 			StreamedStringNode* next = (StreamedStringNode*) malloc(sizeof(StreamedStringNode));
+			if (next == NULL) return -1;
+			
 			current->next = next;
-			current->n_bytes = n_bytes;
+			current->size = n_bytes;
 			current = next;
 		}
 	}

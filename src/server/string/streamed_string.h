@@ -1,7 +1,5 @@
 #pragma once
 
-#include "bounded_string.h"
-
 #include <common_types.h>
 #include <unistd.h>
 #include <limits.h>
@@ -21,7 +19,7 @@ end of the string.
 typedef struct StreamedStringNode {
 	Char data [NODE_SIZE - sizeof(struct StreamedStringNode*) - sizeof(Size)];
 	struct StreamedStringNode* next;
-	Size n_bytes;
+	Size size;
 } StreamedStringNode;
 
 /*
@@ -58,10 +56,3 @@ Free the memory allocated to a streamed string.
 It is assumed that the head node has not been dynamically allocated.
 */
 Void free_streamed_string(StreamedString* string);
-
-/*
-Make a BoundedString from a StreamedString.
-The data of the resulting BoundedString will be dynamically allocated, but not
-the struct itself.
-*/
-BoundedString streamed_to_bounded_string(StreamedString* string);
