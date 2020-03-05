@@ -1,6 +1,8 @@
 #include "server.h"
 #include "worker.h"
 
+#include <stdbool.h>
+#include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -24,6 +26,39 @@ ErrorCode init_server(ServerOptions options, InternetServer* server) {
 	ErrorCode attempt_listen = listen(server->socket, options.backlog);
 	if (attempt_listen != 0) return ERROR_COULD_NOT_LISTEN;
 
-	// TODO: start accept loop
 	return 0;
+}
+
+Void run_server(InternetServer server) {
+	typedef struct sockaddr SocketAddress;
+	typedef socklen_t SocketLength;
+
+	while (true) {
+		SocketAddress incoming;
+		SocketLength incoming_length = sizeof incoming;
+		Pid worker_pid;
+
+		Socket connection = accept(server.socket, &incoming, &incoming_length);
+		if (connection != -1) {
+			ErrorCode attempt_spawn_worker = -1;
+			while (attempt_spawn_worker != 0) {
+				attempt_spawn_worker = spawn_worker(connection, &worker_pid);
+			}
+
+			// Print some information
+			// TODO: have a helper process that the server can talk to, and
+			// send information there instead
+			if (incoming.sa_family == AF_INET) {
+				Port port = ntohs(((InternetSocketAddress*) &incoming)->sin_port);
+				ULong addr = ntohl(((InternetSocketAddress*) &incoming)->sin_addr.s_addr);
+				printf("received connection from addr: %lx, port: %d\n", addr, port);
+			}
+
+			close(connection);
+		}
+	}
+
+	// No clue how this will trigger, but including for safety
+	// (I guess?)
+	close(server.socket);
 }

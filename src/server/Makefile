@@ -1,4 +1,4 @@
-OBJECTS = main.o server.o
+OBJECTS = main.o server.o worker.o
 SUB = 
 
 all: $(OBJECTS) $(SUB)

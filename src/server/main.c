@@ -17,7 +17,7 @@ ErrorCode main(int argc, char* argv[]) {
 
 	ErrorCode attempt_run_server = init_server(options, &server);
 	if (attempt_run_server == 0)
-		printf("success\n");
+		run_server(server);
 
 	return 0;
 }

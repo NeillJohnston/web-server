@@ -26,3 +26,13 @@ Initialize the server.
 Writes details back to the provided InternetServer.
 */
 ErrorCode init_server(ServerOptions options, InternetServer* server);
+
+/*
+Run the server.
+Loops forever, accepting connections and spawning workers to fulfill requests.
+Interesting info may be printed to the console.
+
+TODO: have a helper process that the server can talk to, and send information
+there instead
+*/
+Void run_server(InternetServer server);
