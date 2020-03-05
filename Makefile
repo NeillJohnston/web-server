@@ -16,3 +16,10 @@ server_objects:
 runtest:
 	gcc -I include $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
 	./test/$(subst .,_,$(subst /,_,$(UNIT))).o
+
+.PHONY: runalltests
+runalltests: $(shell ls test)
+
+.PHONY: $(shell ls test)
+$(shell ls test):
+	test/$@

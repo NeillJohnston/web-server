@@ -177,7 +177,7 @@ void _spec_result(int failed) {
 
 void _unit_result(int failed) {
 	if (failed)
-		printf(RED "failed %d tests" "\n", failed);
+		printf(RED "failed %d tests" WHITE "\n", failed);
 	else
-		printf(GREEN "passed all tests" "\n");
+		printf(GREEN "passed all tests" WHITE "\n");
 }
