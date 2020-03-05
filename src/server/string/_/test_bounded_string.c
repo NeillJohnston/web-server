@@ -50,6 +50,24 @@ UNIT(bounded_from_streamed_string) {
 	}
 }
 
+UNIT (free_bounded_string) {
+	SPEC("frees properly") {
+		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
+		if (file == -1) LEAVE("could not open 4098B.txt");
+		StreamedString string;
+		if (read_streamed_string(file, &string) != 0) LEAVE("could not read streamed string");
+
+		BoundedString bounded;
+		bounded_from_streamed_string(&string, &bounded);
+		free_bounded_string(bounded);
+		// If there's an error the program will just crash
+
+		free_streamed_string(&string);
+		DONE;
+	}
+}
+
 DRIVER {
 	TEST(bounded_from_streamed_string);
+	TEST(free_bounded_string);
 }

@@ -26,3 +26,7 @@ ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bo
 
 	return 0;
 }
+
+Void free_bounded_string(BoundedString string) {
+	free(string.data);
+}

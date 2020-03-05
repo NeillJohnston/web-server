@@ -19,5 +19,9 @@ Writes back to bounded.
 The data of the resulting BoundedString will be dynamically allocated, but not
 the struct itself.
 */
-
 ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bounded);
+
+/*
+Free the data in a bounded string.
+*/
+Void free_bounded_string(BoundedString string);
