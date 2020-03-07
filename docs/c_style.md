@@ -157,3 +157,16 @@ ErrorCode foo(Bar bar1, Bar bar2, Baz* baz) {
 ```
 
 Don't ignore error codes, obviously - handle them appropriately and uniquely. Uptime is important.
+
+### Arguments
+
+As stated before, write-back arguments of a function should be the last arguments.
+
+Functions that are used to `free` the dynamically-allocated members of a struct should not take a pointer to the struct. This makes it clear that the argument itself will not simply be freed.
+
+```C
+// Bad - makes it look like all this function will do is call free(foo)
+Void free_foo(Foo* foo);
+// Taking a copy of the struct makes it clear that something more must be going on
+Void free_foo(Foo foo);
+```
