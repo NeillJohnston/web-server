@@ -19,6 +19,8 @@ ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bo
 	current = &string->head;
 	Size back = 0;
 	while (current != NULL) {
+		// MARK return value is ignored, but return value is just one of the
+		// arguments
 		memcpy(bounded->data+back, current->data, current->size);
 		back += current->size;
 		current = current->next;
@@ -29,12 +31,7 @@ ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bo
 
 Bool bounded_string_equ(BoundedString x, BoundedString y) {
 	if (x.length != y.length) return false;
-
-	for (Size i = 0; i < x.length; ++i)
-		if (x.data[i] != y.data[i])
-			return false;
-	
-	return true;
+	return memcmp(x.data, y.data, x.length) == 0;
 }
 
 BoundedString pop_line_inplace(BoundedString* string) {
