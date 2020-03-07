@@ -1,7 +1,8 @@
 #pragma once
 
-#include <common_types.h>
 #include "streamed_string.h"
+
+#include <common_types.h>
 
 /*
 A string (Char array) with a given length.
@@ -20,6 +21,35 @@ The data of the resulting BoundedString will be dynamically allocated, but not
 the struct itself.
 */
 ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bounded);
+
+/*
+Compare two bounded strings x and y, return true if their data matches.
+*/
+Bool bounded_string_equ(BoundedString x, BoundedString y);
+
+/*
+"Pop" a line (characters up to the first newline) from a bounded string, by
+modifying the original string to not include the line or newline.
+"Inplace" refers to the fact that no data is copied, the returned line exists
+within the data of the original string.
+
+When the last line is popped, the original string will have a length of 0.
+
+Supports LF and CRLF line endings.
+*/
+BoundedString pop_line_inplace(BoundedString* string);
+
+/*
+"Pop" a token (characters up to the first whitespace) from a bounded string,
+by modifying the original string to not include the token or following
+whitespace.
+
+Very similar to pop_line_inplace but separates by whitespace instead of by
+newlines.
+
+When the last token is popped, the original string will have a length of 0.
+*/
+BoundedString pop_token_inplace(BoundedString* string);
 
 /*
 Free the data in a bounded string.

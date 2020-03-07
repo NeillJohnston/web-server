@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <sys/types.h>
 
 // Fixed-size integral types
@@ -22,4 +23,5 @@ typedef pid_t Pid;
 typedef int FileDescriptor;
 
 // Misc. types
+typedef bool Bool;
 typedef void Void;
