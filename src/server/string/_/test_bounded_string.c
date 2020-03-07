@@ -7,6 +7,13 @@
 #include <string.h>
 #include <underscore.h>
 
+BoundedString make_bounded_string(Char* data) {
+	return (BoundedString) {
+		.data = data,
+		.length = strlen(data)
+	};
+}
+
 UNIT(bounded_from_streamed_string) {
 	SPEC("converts small strings") {
 		FileDescriptor file = open("src/server/string/_/23B.txt", O_RDONLY);
@@ -110,63 +117,48 @@ UNIT(bounded_string_equ) {
 
 UNIT(pop_line_inplace) {
 	SPEC("pops typical lines ending in LF or CRLF") {
-		BoundedString lines = {
-			.data = "first\nsecond\nthird",
-			.length = 18
-		};
+		BoundedString lines = make_bounded_string("first\nsecond\nthird");
 		BoundedString line = pop_line_inplace(&lines);
 
 		ASSERT(line.length == 5);
-		ASSERT(strncmp(line.data, "first", 5) == 0);
+		ASSERT(memcmp(line.data, "first", 5) == 0);
 		ASSERT(lines.length == 12);
-		ASSERT(strncmp(lines.data, "second\nthird", 12) == 0);
+		ASSERT(memcmp(lines.data, "second\nthird", 12) == 0);
 
-		BoundedString lines_crlf = {
-			.data = "first\r\nsecond\r\nthird",
-			.length = 20
-		};
+		BoundedString lines_crlf = make_bounded_string("first\r\nsecond\r\nthird");
 		BoundedString line_crlf = pop_line_inplace(&lines_crlf);
 
 		ASSERT(line_crlf.length == 5);
-		ASSERT(strncmp(line_crlf.data, "first", 5) == 0);
+		ASSERT(memcmp(line_crlf.data, "first", 5) == 0);
 		ASSERT(lines_crlf.length == 13);
-		ASSERT(strncmp(lines_crlf.data, "second\r\nthird", 13) == 0);
+		ASSERT(memcmp(lines_crlf.data, "second\r\nthird", 13) == 0);
 
 		DONE;
 	}
 	SPEC("pops the last line") {
-		BoundedString lines = {
-			.data = "single line",
-			.length = 11
-		};
+		BoundedString lines = make_bounded_string("single line");
 		BoundedString line = pop_line_inplace(&lines);
 
 		ASSERT(line.length == 11);
-		ASSERT(strncmp(line.data, "single line", 11) == 0);
+		ASSERT(memcmp(line.data, "single line", 11) == 0);
 		ASSERT(lines.length == 0);
 
 		DONE;
 	}
 	SPEC("pops 0-length lines ending in LF or CRLF") {
-		BoundedString lines = {
-			.data = "\n\ncontent",
-			.length = 9
-		};
+		BoundedString lines = make_bounded_string("\n\ncontent");
 		BoundedString line = pop_line_inplace(&lines);
 
 		ASSERT(line.length == 0);
 		ASSERT(lines.length == 8);
-		ASSERT(strncmp(lines.data, "\ncontent", 8) == 0);
+		ASSERT(memcmp(lines.data, "\ncontent", 8) == 0);
 
-		BoundedString lines_crlf = {
-			.data = "\r\n\r\ncontent",
-			.length = 11
-		};
+		BoundedString lines_crlf = make_bounded_string("\r\n\r\ncontent");
 		BoundedString line_crlf = pop_line_inplace(&lines_crlf);
 
 		ASSERT(line_crlf.length == 0);
 		ASSERT(lines_crlf.length == 9);
-		ASSERT(strncmp(lines_crlf.data, "\r\ncontent", 9) == 0);
+		ASSERT(memcmp(lines_crlf.data, "\r\ncontent", 9) == 0);
 
 		DONE;
 	}
@@ -183,20 +175,17 @@ UNIT(pop_line_inplace) {
 		DONE;
 	}
 	SPEC("pops multiple lines in sequence") {
-		BoundedString lines = {
-			.data = "first\nsecond\nthird",
-			.length = 18
-		};
+		BoundedString lines = make_bounded_string("first\nsecond\nthird");
 		BoundedString line1 = pop_line_inplace(&lines);
 		BoundedString line2 = pop_line_inplace(&lines);
 		BoundedString line3 = pop_line_inplace(&lines);
 
 		ASSERT(line1.length == 5);
-		ASSERT(strncmp(line1.data, "first", 5) == 0);
+		ASSERT(memcmp(line1.data, "first", 5) == 0);
 		ASSERT(line2.length == 6);
-		ASSERT(strncmp(line2.data, "second", 6) == 0);
+		ASSERT(memcmp(line2.data, "second", 6) == 0);
 		ASSERT(line3.length == 5);
-		ASSERT(strncmp(line3.data, "third", 5) == 0);
+		ASSERT(memcmp(line3.data, "third", 5) == 0);
 		ASSERT(lines.length == 0);
 
 		DONE;
@@ -205,28 +194,22 @@ UNIT(pop_line_inplace) {
 
 UNIT(pop_token_inplace) {
 	SPEC("pops tokens with arbitrary whitespace") {
-		BoundedString tokens = {
-			.data = "first \t\r \nsecond third",
-			.length = 22
-		};
+		BoundedString tokens = make_bounded_string("first \t\r \nsecond third");
 		BoundedString token = pop_token_inplace(&tokens);
 
 		ASSERT(token.length == 5);
-		ASSERT(strncmp(token.data, "first", 5) == 0);
+		ASSERT(memcmp(token.data, "first", 5) == 0);
 		ASSERT(tokens.length == 12);
-		ASSERT(strncmp(tokens.data, "second third", 12) == 0);
+		ASSERT(memcmp(tokens.data, "second third", 12) == 0);
 
 		DONE;
 	}
 	SPEC("pops the last token") {
-		BoundedString tokens = {
-			.data = "single_token",
-			.length = 12
-		};
+		BoundedString tokens = make_bounded_string("single_token");
 		BoundedString token = pop_token_inplace(&tokens);
 
 		ASSERT(token.length == 12);
-		ASSERT(strncmp(token.data, "single_token", 12) == 0);
+		ASSERT(memcmp(token.data, "single_token", 12) == 0);
 		ASSERT(tokens.length == 0);
 
 		DONE;
@@ -244,10 +227,7 @@ UNIT(pop_token_inplace) {
 		DONE;
 	}
 	SPEC("pops multiple tokens in succession") {
-		BoundedString tokens = {
-			.data = "a \r\nb\t c",
-			.length = 8
-		};
+		BoundedString tokens = make_bounded_string("a \r\nb\t c");
 		BoundedString token1 = pop_token_inplace(&tokens);
 		BoundedString token2 = pop_token_inplace(&tokens);
 		BoundedString token3 = pop_token_inplace(&tokens);
@@ -260,6 +240,22 @@ UNIT(pop_token_inplace) {
 		ASSERT(token3.data[0] == 'c');
 		ASSERT(tokens.length == 0);
 
+		DONE;
+	}
+}
+
+UNIT(copy_bounded_string) {
+	SPEC("produces an identical string with new memory") {
+		BoundedString source = make_bounded_string("hello");
+		BoundedString destination;
+
+		if (copy_bounded_string(source, &destination) != 0) LEAVE("malloc error in copy_bounded_string");
+
+		ASSERT(source.length == destination.length);
+		ASSERT(memcmp(source.data, destination.data, source.length) == 0);
+		// Will crash if destination.data was not dynamically allocated
+		free(destination.data);
+		
 		DONE;
 	}
 }
@@ -286,5 +282,6 @@ DRIVER {
 	TEST(bounded_string_equ);
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
+	TEST(copy_bounded_string);
 	TEST(free_bounded_string);
 }

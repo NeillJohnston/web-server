@@ -95,6 +95,16 @@ BoundedString pop_token_inplace(BoundedString* string) {
 	return token;
 }
 
+ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) {
+	destination->data = malloc(source.length);
+	if (destination->data == NULL) return -1;
+	destination->length = source.length;
+
+	memcpy(destination->data, source.data, source.length);
+
+	return 0;
+}
+
 Void free_bounded_string(BoundedString string) {
 	free(string.data);
 }

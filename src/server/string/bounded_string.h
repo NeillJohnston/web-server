@@ -52,6 +52,13 @@ When the last token is popped, the original string will have a length of 0.
 BoundedString pop_token_inplace(BoundedString* string);
 
 /*
+Copy source to destination, dynamically allocating the memory.
+Returns -1 if there's an error with malloc.
+Writes back to destination.
+*/
+ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination);
+
+/*
 Free the data in a bounded string.
 */
 Void free_bounded_string(BoundedString string);
