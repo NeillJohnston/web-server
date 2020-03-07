@@ -68,7 +68,7 @@ BoundedString pop_line_inplace(BoundedString* string) {
 }
 
 /*
-Returns whether c is a whitespace character - space, tab, CR, or LF. 
+Returns whether c is a whitespace character - space, tab, CR, or LF.
 */
 static Bool is_whitespace(Char c) {
 	return c == ' ' || c == '\t' || c == '\r' || c == '\n';
