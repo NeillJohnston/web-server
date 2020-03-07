@@ -13,14 +13,22 @@ $(SERVER_EXECUTABLE): server_objects
 server_objects:
 	$(MAKE) -C $(SERVER_ROOT)
 
+
+# --- Unit Testing ---
+ALLTESTS = $(shell find -wholename "*/_/test_*.c")
+VERBOSE = 2
+
+# Make sure UNIT= is declared when running make runtest
 .PHONY: runtest
 runtest:
-	gcc -I include $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
+	gcc $(WARNINGS) -I include -D_VERBOSE=$(VERBOSE) $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
 	./test/$(subst .,_,$(subst /,_,$(UNIT))).o
 
 .PHONY: runalltests
-runalltests: $(shell ls test)
+runalltests: $(ALLTESTS)
 
-.PHONY: $(shell ls test)
-$(shell ls test):
-	test/$@
+# Force _VERBOSE to 1 to declutter output
+.PHONY: $(ALLTESTS)
+$(ALLTESTS):
+	gcc $(WARNINGS) -I include -D_VERBOSE=1 $@ -o test/$(subst .,_,$(subst /,_,$@)).o
+	./test/$(subst .,_,$(subst /,_,$@)).o
