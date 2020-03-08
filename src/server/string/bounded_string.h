@@ -56,7 +56,7 @@ Append suffix to string, inplace (without making a new bounded string).
 Caller must do necssary memory management and ensure that the data buffer of
 string is large enough to hold the suffix.
 */
-Void append_inplace(BoundedString* string, BoundedString suffix);
+Void append_inplace(BoundedString suffix, BoundedString* string);
 
 /*
 Copy source to destination, dynamically allocating the memory.

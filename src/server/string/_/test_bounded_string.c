@@ -259,7 +259,7 @@ UNIT(append_inplace) {
 		};
 		BoundedString suffix = make_bounded_string("world");
 
-		append_inplace(&string, suffix);
+		append_inplace(suffix, &string);
 		COMPARE(string, equ, "helloworld");
 
 		DONE;
@@ -272,7 +272,7 @@ UNIT(append_inplace) {
 		};
 		BoundedString string1 = make_bounded_string("string");
 
-		append_inplace(&zero1, string1);
+		append_inplace(string1, &zero1);
 		COMPARE(zero1, equ, "string");
 
 		Char buffer2 [6] = "string";
@@ -282,7 +282,7 @@ UNIT(append_inplace) {
 		};
 		BoundedString zero2 = make_bounded_string("");
 
-		append_inplace(&string2, zero2);
+		append_inplace(zero2, &string2);
 		COMPARE(string2, equ, "string");
 
 		DONE;
