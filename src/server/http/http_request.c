@@ -11,14 +11,11 @@ Modifies request and performs free operations depending on stage.
 Helper for parse_http_request, when an error is detected it gets passed here.
 */
 static ErrorCode clean_partial_parse(HttpRequest* request, Int stage) {
-	if (stage <= 1) {
+	if (stage >= 1) {
+		free_bounded_string(request->raw);
 	}
-	if (stage <= 2) {
+	if (stage >= 2) {
 		free(request->headers);
-	}
-	if (stage <= 3) {
-	}
-	if (stage <= 3) {
 	}
 
 	return ERROR_MALFORMED_REQUEST;
