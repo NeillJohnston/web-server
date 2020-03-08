@@ -1,4 +1,5 @@
 #include "../http_request.c"
+
 #include "../../string/bounded_string.c"
 
 #include <fcntl.h>
@@ -139,6 +140,24 @@ UNIT(parse_http_request) {
 }
 
 UNIT(free_http_request) {
+	SPEC("frees properly") {
+		BoundedString simple_string = make_bounded_string(SIMPLE);
+		BoundedString headers_string = make_bounded_string(HEADERS);
+		BoundedString content_string = make_bounded_string(CONTENT);
+		HttpRequest request;
+
+		if (parse_http_request(simple_string, &request) != 0) LEAVE("could not parse simple");
+		free_http_request(request);
+		
+		if (parse_http_request(headers_string, &request) != 0) LEAVE("could not parse headers");
+		free_http_request(request);
+		
+		if (parse_http_request(content_string, &request) != 0) LEAVE("could not parse content");
+		free_http_request(request);
+		
+		// No real "tests", just make sure free doesn't fail
+		DONE;
+	}
 }
 
 DRIVER {

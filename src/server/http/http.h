@@ -27,8 +27,6 @@ the request comes from (raw).
 
 MARK might be nice to have an enum for method instead of passing magic strings
 around
-MARK might be useful to have an array type for HttpHeader, instead of breaking
-it into two fields - figure out during implementation if this is necessary
 */
 typedef struct {
 	BoundedString method;
@@ -47,8 +45,6 @@ typedef struct {
 Structured form of an HTTP response.
 Includes all the necessary data (for HTTP version < 2) and the original string
 the request comes from (raw).
-
-MARK see HttpRequest, same comment about headers
 */
 typedef struct {
 	HttpVersion version;

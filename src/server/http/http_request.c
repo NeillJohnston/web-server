@@ -90,3 +90,8 @@ ErrorCode parse_http_request(BoundedString request_string, HttpRequest* request)
 
 	return 0;
 }
+
+Void free_http_request(HttpRequest request) {
+	free(request.headers);
+	free_bounded_string(request.raw);
+}
