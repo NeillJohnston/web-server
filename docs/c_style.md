@@ -11,7 +11,7 @@ Constants that may be changed at compile time should have both a `#define` and a
 ```C
 #define _FOO 100
 // ...
-const Int FOO = _FOO;
+static const Int FOO = _FOO;
 ```
 
 This allows compile-time change in `gcc` via `-D_FOO=?`. Other constants should just use a `const` data type, to limit macro pollution and ensure the compiler can check types.
@@ -146,6 +146,8 @@ If a global variable _must_ be used, then it should encapsulate the program stat
 
 Each function must be unit-tested. This means that program behavior should be split into functions that can _at least_ be unit-tested, and perhaps more splits are required - but never less.
 
+### Error Codes
+
 If a function might error for any reason, it should return an error code (typically of type `ErrorCode`). Other return values should be write-back arguments at the end of the argument list. This prevents contrived special values representing errors from being made, and ensures that data written back is valid:
 
 ```C
@@ -156,7 +158,17 @@ ErrorCode foo(Bar bar1, Bar bar2, Baz* baz) {
 }
 ```
 
-Don't ignore error codes, obviously - handle them appropriately and uniquely. Uptime is important.
+Don't ignore error codes, obviously - handle them appropriately and specifically. Uptime is important.
+
+If the ways that a function may fail are significantly different, then make sure to define `ErrorCode` constants in the header file that holds the function.
+
+```C
+static const ErrorCode ERROR_FOO = 1;
+static const ErrorCode ERROR_BAR = 2;
+static const ErrorCode ERROR_BAZ = 3;
+```
+
+These constants should all be positive. Use -1 for generic errors or times when errno needs to be checked, and use 0 for success. Neither of these need constants.
 
 ### Arguments
 
@@ -170,3 +182,9 @@ Void free_foo(Foo* foo);
 // Taking a copy of the struct makes it clear that something more must be going on
 Void free_foo(Foo foo);
 ```
+
+## Programming Paradigm
+
+C is an imperative language - not an object-oriented language, don't force it to be.
+
+That means that `struct`s really are just structured data and have no notion of methods or private variables. Modules should define their data types and useful functions that modify those data/transform the data into other types/etc., but the module itself doesn't need to be the only way to interact with the data.

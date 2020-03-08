@@ -95,7 +95,7 @@ BoundedString pop_token_inplace(BoundedString* string) {
 	return token;
 }
 
-Void append_inplace(BoundedString* string, BoundedString suffix) {
+Void append_inplace(BoundedString suffix, BoundedString* string) {
 	memcpy(string->data + string->length, suffix.data, suffix.length);
 	string->length += suffix.length;
 }
