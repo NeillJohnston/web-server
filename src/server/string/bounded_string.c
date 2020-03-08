@@ -95,6 +95,11 @@ BoundedString pop_token_inplace(BoundedString* string) {
 	return token;
 }
 
+Void append_inplace(BoundedString* string, BoundedString suffix) {
+	memcpy(string->data + string->length, suffix.data, suffix.length);
+	string->length += suffix.length;
+}
+
 ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) {
 	destination->data = malloc(source.length);
 	if (destination->data == NULL) return -1;

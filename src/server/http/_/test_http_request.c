@@ -2,7 +2,6 @@
 
 #include "../../string/bounded_string.c"
 
-#include <fcntl.h>
 #include <string.h>
 #include <underscore.h>
 

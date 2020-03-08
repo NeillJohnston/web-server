@@ -14,6 +14,12 @@ BoundedString make_bounded_string(Char* data) {
 	};
 }
 
+Bool equ(BoundedString bounded, const Char* string) {
+	Size length = strlen(string);
+	if (bounded.length != length) return false;
+	return strncmp(bounded.data, string, length) == 0;
+}
+
 UNIT(bounded_from_streamed_string) {
 	SPEC("converts small strings") {
 		FileDescriptor file = open("src/server/string/_/23B.txt", O_RDONLY);
@@ -244,6 +250,45 @@ UNIT(pop_token_inplace) {
 	}
 }
 
+UNIT(append_inplace) {
+	SPEC("appends two strings") {
+		Char buffer [10] = "hello.....";
+		BoundedString string = {
+			.data = buffer,
+			.length = 5
+		};
+		BoundedString suffix = make_bounded_string("world");
+
+		append_inplace(&string, suffix);
+		COMPARE(string, equ, "helloworld");
+
+		DONE;
+	}
+	SPEC("works with 0-length strings") {
+		Char buffer1 [6] = "......";
+		BoundedString zero1 = {
+			.data = buffer1,
+			.length = 0
+		};
+		BoundedString string1 = make_bounded_string("string");
+
+		append_inplace(&zero1, string1);
+		COMPARE(zero1, equ, "string");
+
+		Char buffer2 [6] = "string";
+		BoundedString string2 = {
+			.data = buffer2,
+			.length = 6
+		};
+		BoundedString zero2 = make_bounded_string("");
+
+		append_inplace(&string2, zero2);
+		COMPARE(string2, equ, "string");
+
+		DONE;
+	}
+}
+
 UNIT(copy_bounded_string) {
 	SPEC("produces an identical string with new memory") {
 		BoundedString source = make_bounded_string("hello");
@@ -282,6 +327,7 @@ DRIVER {
 	TEST(bounded_string_equ);
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
+	TEST(append_inplace);
 	TEST(copy_bounded_string);
 	TEST(free_bounded_string);
 }

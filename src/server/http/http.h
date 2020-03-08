@@ -69,12 +69,13 @@ ErrorCode parse_http_request(BoundedString request_string, HttpRequest* request)
 
 /*
 Turn a structured HTTP response into a raw response string.
+Writes back to response_string.
 
-The data of the resulting BoundedString will be dynamically allocated.
-Both the resulting BoundedString and request can be freed independently after
+The data of response_string will be dynamically allocated.
+Both response_string and response can be freed independently after
 calling.
 */
-BoundedString make_http_response_string(HttpResponse response);
+ErrorCode make_http_response_string(HttpResponse response, BoundedString* response_string);
 
 /*
 Free the data of an HttpRequest.

@@ -52,6 +52,13 @@ When the last token is popped, the original string will have a length of 0.
 BoundedString pop_token_inplace(BoundedString* string);
 
 /*
+Append suffix to string, inplace (without making a new bounded string).
+Caller must do necssary memory management and ensure that the data buffer of
+string is large enough to hold the suffix.
+*/
+Void append_inplace(BoundedString* string, BoundedString suffix);
+
+/*
 Copy source to destination, dynamically allocating the memory.
 Returns -1 if there's an error with malloc.
 Writes back to destination.
