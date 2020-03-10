@@ -4,9 +4,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-// TODO: NODE_SIZE is set to the virtual page size (on dev computer)
-// 1. Find out if this can be determined at compile-time, for other machines
-// 2. Find out if this is actually helps memory
+// Must be a multiple of 8 due to struct packing
 #define NODE_SIZE (0x1000)
 
 /*

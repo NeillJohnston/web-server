@@ -1,10 +1,18 @@
 #include "worker.h"
+#include "http/http.h"
+#include "string/streamed_string.h"
+#include "string/bounded_string.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
-Void be_worker(Socket socket) {
-	// TODO:
-	_exit(-1);
+/*
+Perform the task of receiving requests and sending responses.
+*/
+static Void be_worker(Socket socket) {
+	_exit(0);
 }
 
 ErrorCode spawn_worker(Socket socket, Pid* worker_pid) {

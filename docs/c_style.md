@@ -2,7 +2,7 @@
 
 ## Preprocessor Directives
 
-All `#include` directives should appear at the very top of the files, except for in header files where the first line should be the header guard. There should be two blocks of includes, ordered alphabetically: the first block contains project-specific includes, and the second block contains stdlib/other lib includes.
+All `#include` directives should appear at the very top of the files, except for in header files where the first line should be the header guard. There should be two blocks of includes, ordered alphabetically: the first block contains project-specific includes, and the second block contains stdlib/other lib includes. The only exception to the alphabetical ordering is in the project-specific includes, where the header files that are being defined should be listed first.
 
 All other directives should appear in separate blocks right after the `#include` block.
 

@@ -1,5 +1,5 @@
 OBJECTS = main.o server.o worker.o
-SUB = string
+SUB = string http
 
 all: $(OBJECTS) $(SUB)
 

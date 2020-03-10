@@ -28,18 +28,18 @@ ErrorCode make_http_response_string(HttpResponse response, BoundedString* respon
 		"HTTP/%u.%u %u ",
 		response.version.major, response.version.minor, response.status_code
 	);
-	append_inplace(response_string, response.status_message);
-	append_inplace(response_string, NEWLINE);
+	append_inplace(response.status_message, response_string);
+	append_inplace(NEWLINE, response_string);
 
 	for (Size i = 0; i < response.n_headers; ++i) {
-		append_inplace(response_string, response.headers[i].name);
-		append_inplace(response_string, HEADER_SEP);
-		append_inplace(response_string, response.headers[i].value);
-		append_inplace(response_string, NEWLINE);
+		append_inplace(response.headers[i].name, response_string);
+		append_inplace(HEADER_SEP, response_string);
+		append_inplace(response.headers[i].value, response_string);
+		append_inplace(NEWLINE, response_string);
 	}
-	append_inplace(response_string, NEWLINE);
+	append_inplace(NEWLINE, response_string);
 
-	append_inplace(response_string, response.content);
+	append_inplace(response.content, response_string);
 
 	return 0;
 }
