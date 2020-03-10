@@ -9,14 +9,14 @@ Void log_error(Char* message) {
 }
 
 ErrorCode main(int argc, char* argv[]) {
-	ServerOptions options = {
+	ServerConfig options = {
 		.port = 3000,
 		.backlog = 1
 	};
 	InternetServer server;
 
-	ErrorCode attempt_run_server = init_server(options, &server);
-	if (attempt_run_server == 0)
+	ErrorCode attempt_init_server = init_server(options, &server);
+	if (attempt_init_server == 0)
 		run_server(server);
 
 	return 0;

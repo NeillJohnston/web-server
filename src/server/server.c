@@ -1,12 +1,11 @@
 #include "server.h"
-#include "worker.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-ErrorCode init_server(ServerOptions options, InternetServer* server) {
+ErrorCode init_server(ServerConfig options, InternetServer* server) {
 	typedef struct sockaddr SocketAddress;
 
 	// Validate options
