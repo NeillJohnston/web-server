@@ -1,4 +1,4 @@
-OBJECTS = main.o server.o worker.o
+OBJECTS = main.o server.o worker.o config.o
 SUB = string http
 
 all: $(OBJECTS) $(SUB)

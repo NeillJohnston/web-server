@@ -21,7 +21,7 @@ VERBOSE = 2
 # Make sure UNIT= is declared when running make runtest
 .PHONY: runtest
 runtest:
-	gcc $(WARNINGS) -I include -D_VERBOSE=$(VERBOSE) $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
+	gcc $(WARNINGS) -g -I include -D_VERBOSE=$(VERBOSE) $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
 	./test/$(subst .,_,$(subst /,_,$(UNIT))).o
 
 .PHONY: runalltests

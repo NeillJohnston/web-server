@@ -4,7 +4,7 @@
 
 UNIT(init_server) {
 	SPEC("is able to initialize a server") {
-		ServerOptions options = {
+		ServerConfig options = {
 			.port = 3000,
 			.backlog = 10
 		};
@@ -15,7 +15,7 @@ UNIT(init_server) {
 		DONE;
 	}
 	SPEC("errors for invalid options") {
-		ServerOptions options = {
+		ServerConfig options = {
 			.port = 3001,
 			.backlog = -1
 		};
@@ -26,7 +26,7 @@ UNIT(init_server) {
 		DONE;
 	}
 	SPEC("will not bind to the same port twice") {
-		ServerOptions options = {
+		ServerConfig options = {
 			.port = 3002,
 			.backlog = 10
 		};
