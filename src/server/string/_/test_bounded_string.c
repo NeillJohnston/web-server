@@ -248,6 +248,15 @@ UNIT(pop_token_inplace) {
 
 		DONE;
 	}
+	SPEC("returns 0-length tokens for strings with only whitespace") {
+		BoundedString tokens = make_bounded_string("    ");
+		BoundedString token = pop_token_inplace(&tokens);
+
+		ASSERT(token.length == 0);
+		ASSERT(tokens.length == 0);
+
+		DONE;
+	}
 }
 
 UNIT(append_inplace) {
