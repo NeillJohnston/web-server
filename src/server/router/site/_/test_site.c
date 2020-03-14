@@ -1,4 +1,5 @@
 #include "../site.c"
+#include "../../../files/files.c"
 #include "../../../string/bounded_string.c"
 #include "../../../string/streamed_string.c"
 
@@ -61,7 +62,16 @@ UNIT(route_site) {
 
 		DONE;
 	}
-	// TODO: more tests related to security
+	SPEC("403s for suspicious paths") {
+		BoundedString root = make_bounded_string("src/server/router/site/_/root/");
+		BoundedString route = make_bounded_string("sub/../../secrets");
+		HttpResponse response;
+		UInt status_code = route_site(root, route, &response);
+
+		ASSERT(status_code == 403);
+
+		DONE;
+	}
 }
 
 DRIVER {
