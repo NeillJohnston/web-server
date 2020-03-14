@@ -46,6 +46,9 @@ typedef struct {
 Read in a string from a stream, returning an error if necessary.
 Does not cap the size of the resulting string.
 Writes back to the given string.
+
+If this function errors, then this function will free the memory that has been
+created so far before exiting - the caller does not have to.
 */
 ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string);
 
