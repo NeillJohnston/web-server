@@ -42,7 +42,7 @@ ErrorCode parse_config(Char* config_path, ServerConfig* config);
 Initialize the server.
 Writes details back to the provided InternetServer.
 */
-ErrorCode init_server(ServerConfig options, InternetServer* server);
+ErrorCode init_server(ServerConfig config, InternetServer* server);
 
 /*
 Run the server.
@@ -52,11 +52,11 @@ Interesting info may be printed to the console.
 TODO: have a helper process that the server can talk to, and send information
 there instead
 */
-Void run_server(InternetServer server);
+Void run_server(ServerConfig config, InternetServer server);
 
 /*
 Forks a new worker for the specified socket.
 In the parent process, writes back the child process pid to worker_pid.
 In the worker process, continues to serve the request(s) over socket.
 */
-ErrorCode spawn_worker(Socket socket, Pid* worker_pid);
+ErrorCode spawn_worker(Socket socket, ServerConfig config, Pid* worker_pid);

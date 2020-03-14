@@ -54,7 +54,7 @@ ErrorCode main(int argc, char* argv[]) {
 		return -1;
 	}
 	
-	run_server(server);
+	run_server(config, server);
 
 	return 0;
 }

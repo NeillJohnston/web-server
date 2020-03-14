@@ -5,16 +5,16 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-ErrorCode init_server(ServerConfig options, InternetServer* server) {
+ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	typedef struct sockaddr SocketAddress;
 
-	// Validate options
-	if (options.backlog <= 0) return ERROR_INVALID_OPTIONS;
+	// Validate config
+	if (config.backlog <= 0) return ERROR_INVALID_OPTIONS;
 
 	server->address = (InternetSocketAddress) {
 		.sin_family = AF_INET,
-		.sin_port = htons(options.port),
-		.sin_addr.s_addr = htonl(INADDR_ANY)
+		.sin_port = htons(config.port),
+		.sin_addr.s_addr = htonl(config.local ? INADDR_LOOPBACK : INADDR_ANY)
 	};
 	server->socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (server->socket == -1) return ERROR_COULD_NOT_ESTABLISH;
@@ -22,13 +22,13 @@ ErrorCode init_server(ServerConfig options, InternetServer* server) {
 	ErrorCode attempt_bind = bind(server->socket, (SocketAddress*) &server->address, sizeof server->address);
 	if (attempt_bind != 0) return ERROR_COULD_NOT_BIND;
 
-	ErrorCode attempt_listen = listen(server->socket, options.backlog);
+	ErrorCode attempt_listen = listen(server->socket, config.backlog);
 	if (attempt_listen != 0) return ERROR_COULD_NOT_LISTEN;
 
 	return 0;
 }
 
-Void run_server(InternetServer server) {
+Void run_server(ServerConfig config, InternetServer server) {
 	typedef struct sockaddr SocketAddress;
 	typedef socklen_t SocketLength;
 
@@ -41,7 +41,7 @@ Void run_server(InternetServer server) {
 		if (connection != -1) {
 			ErrorCode attempt_spawn_worker = -1;
 			while (attempt_spawn_worker != 0) {
-				attempt_spawn_worker = spawn_worker(connection, &worker_pid);
+				attempt_spawn_worker = spawn_worker(connection, config, &worker_pid);
 			}
 
 			// Print some information

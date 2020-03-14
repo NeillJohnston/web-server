@@ -11,18 +11,18 @@
 /*
 Perform the task of receiving requests and sending responses.
 */
-static Void be_worker(Socket socket) {
+static Void be_worker(Socket socket, ServerConfig config) {
 	_exit(0);
 }
 
-ErrorCode spawn_worker(Socket socket, Pid* worker_pid) {
+ErrorCode spawn_worker(Socket socket, ServerConfig config, Pid* worker_pid) {
 	const Pid INVALID = -1;
 
 	Pid forked = fork();
 	
 	if (forked == INVALID) return -1;
 	else if (forked == 0) {
-		be_worker(socket);
+		be_worker(socket, config);
 	}
 	else {
 		*worker_pid = forked;
