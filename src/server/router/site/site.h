@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../router.h"
+#include "../../http/http.h"
+#include "../../string/bounded_string.h"
 
 /*
 A site route is a top-level route, and should basically look like a path to a
