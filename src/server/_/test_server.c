@@ -41,7 +41,7 @@ UNIT(init_server) {
 }
 
 // Needs a stub just so it can compile
-ErrorCode spawn_worker(Socket connection, Pid* worker_pid) {
+ErrorCode spawn_worker(Socket connection, ServerConfig config, Pid* worker_pid) {
 	return 0;
 }
 

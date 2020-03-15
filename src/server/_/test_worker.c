@@ -10,10 +10,11 @@ UNIT(be_worker) {
 // Ugly to write proper tests, especially with my limited framework
 UNIT(spawn_worker) {
 	SPEC("must spawn a new process") {
+		ServerConfig config;
 		Pid current = getpid();
 		Pid worker = 0;
 
-		OKAY(spawn_worker(-1, &worker));
+		OKAY(spawn_worker(-1, config, &worker));
 		ASSERT(worker != current);
 		ASSERT(worker != 0);
 
