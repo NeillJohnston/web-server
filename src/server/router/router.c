@@ -46,10 +46,6 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 			.minor = 1
 		},
 		.status_code = 0,
-		.status_message = {
-			.data = "",
-			.length = 0
-		},
 		.n_headers = 0,
 		.headers = NULL,
 		.content = {
@@ -67,16 +63,6 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 	else {
 		response.status_code = route_site(config.root, request.path, &response);
 	}
-
-	if (STATUS_MESSAGES[response.status_code] == NULL) {
-		response.status_code = 500;
-	}
-
-	Char* status_message_cstr = STATUS_MESSAGES[response.status_code];
-	response.status_message = (BoundedString) {
-		.data = status_message_cstr,
-		.length = strlen(status_message_cstr)
-	};
 
 	return response;
 }

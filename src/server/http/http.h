@@ -49,7 +49,6 @@ the request comes from (raw).
 typedef struct {
 	HttpVersion version;
 	UInt status_code;
-	BoundedString status_message;
 
 	Size n_headers;
 	HttpHeader* headers;

@@ -35,7 +35,6 @@ UNIT(make_http_response_string) {
 				.minor = 0
 			},
 			.status_code = 200,
-			.status_message = make_bounded_string("OK"),
 
 			.n_headers = 0,
 			
@@ -70,7 +69,6 @@ UNIT(make_http_response_string) {
 				.minor = 1
 			},
 			.status_code = 404,
-			.status_message = make_bounded_string("Not Found"),
 
 			.n_headers = 2,
 			.headers = headers,
@@ -116,7 +114,6 @@ UNIT(free_http_response) {
 				.minor = 1
 			},
 			.status_code = 500,
-			.status_message = make_dynamic_bounded_string("Needs to Be Freed"),
 
 			.n_headers = 2,
 			.headers = headers,
