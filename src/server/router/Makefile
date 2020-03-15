@@ -1,5 +1,5 @@
 OBJECTS = router.o
-SUB =
+SUB = site
 
 all: $(OBJECTS) $(SUB)
 
