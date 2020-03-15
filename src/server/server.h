@@ -16,6 +16,7 @@ typedef struct {
 	BoundedString root;
 	// Optional
 	Bool local;
+	BoundedString api_prefix;
 } ServerConfig;
 
 typedef struct {

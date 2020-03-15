@@ -17,4 +17,4 @@ directory.
 Route to a site route, returning the HTTP status code.
 Writes back content and any necessary headers to response.
 */
-UInt route_site(BoundedString root, BoundedString route, HttpResponse* response);
+UInt route_site(BoundedString root, BoundedString path, HttpResponse* response);

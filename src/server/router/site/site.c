@@ -10,24 +10,24 @@ static const BoundedString INDEX_HTML = {
 	.length = 12
 };
 
-UInt route_site(BoundedString root, BoundedString route, HttpResponse* response) {
+UInt route_site(BoundedString root, BoundedString path, HttpResponse* response) {
 	Char path_data [PATH_MAX];
-	BoundedString path = {
+	BoundedString full_path = {
 		.data = path_data,
 		.length = 0
 	};
 
 	// Check for suspicious paths
 	// TODO: find out if there's any other way to abuse paths and check accordingly
-	for (Size i = 0; i < route.length; ++i)
-		if (route.data[i] == '.' && route.data[i+1] == '.') return 403;
+	for (Size i = 0; i < path.length; ++i)
+		if (path.data[i] == '.' && path.data[i+1] == '.') return 403;
 
-	append_inplace(root, &path);
-	append_inplace(route, &path);
-	append_inplace(INDEX_HTML, &path);
+	append_inplace(root, &full_path);
+	append_inplace(path, &full_path);
+	append_inplace(INDEX_HTML, &full_path);
 
 	BoundedString contents;
-	if (get_file_contents(path, &contents) != 0) {
+	if (get_file_contents(full_path, &contents) != 0) {
 		if (errno == ENOENT) return 404;
 		else return 500;
 	}

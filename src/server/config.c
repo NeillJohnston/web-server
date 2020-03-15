@@ -45,6 +45,7 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 
 	// Initialize optionals with defaults
 	config->local = true;
+	config->api_prefix = (BoundedString) { .data = "", .length = 0 };
 
 	Flags required = FLAG_PORT | FLAG_BACKLOG | FLAG_ROOT;
 

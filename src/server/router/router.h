@@ -3,6 +3,14 @@
 #include "../server.h"
 #include "../http/http.h"
 
+// TODO: Make const, find a nice way to do this
+static Char* STATUS_MESSAGES [600] = {
+	[200] = "OK",
+	[403] = "Forbidden",
+	[404] = "Not found",
+	[500] = "Internal error"
+};
+
 /*
 The server routes HTTP requests to three different sub-routers -
 -	Site, which handles requests for top-level routes (e.g. /)
