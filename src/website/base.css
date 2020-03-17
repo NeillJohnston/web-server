@@ -1,0 +1,53 @@
+:root {
+  --gray: #afbfaf;
+  --black: #0f2f1f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--black);
+  margin: 0;
+}
+
+body {
+  background-color: white;
+}
+
+b {
+  font-weight: 700;
+}
+
+h1 {
+  font-weight: 700;
+}
+
+div.center-contents {
+  text-align: center;
+}
+
+div.image {
+  text-align: center;
+  font-style: italic;
+}
+
+div.nav {
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid var(--gray);
+}
+
+div.nav > * {
+  margin: 0px 20px;
+}
+
+div.nav > a {
+  color: var(--black);
+}
