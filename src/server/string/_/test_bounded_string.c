@@ -4,7 +4,6 @@
 #include "../streamed_string.c"
 
 #include <fcntl.h>
-#include <string.h>
 #include <underscore.h>
 
 BoundedString make_bounded_string(Char* data) {
@@ -261,7 +260,7 @@ UNIT(pop_token_inplace) {
 
 UNIT(append_inplace) {
 	SPEC("appends two strings") {
-		Char buffer [10] = "hello.....";
+		Char buffer [] = "hello.....";
 		BoundedString string = {
 			.data = buffer,
 			.length = 5
@@ -274,7 +273,7 @@ UNIT(append_inplace) {
 		DONE;
 	}
 	SPEC("works with 0-length strings") {
-		Char buffer1 [6] = "......";
+		Char buffer1 [] = "......";
 		BoundedString zero1 = {
 			.data = buffer1,
 			.length = 0
@@ -284,7 +283,7 @@ UNIT(append_inplace) {
 		append_inplace(string1, &zero1);
 		COMPARE(zero1, equ, "string");
 
-		Char buffer2 [6] = "string";
+		Char buffer2 [] = "string";
 		BoundedString string2 = {
 			.data = buffer2,
 			.length = 6
@@ -292,6 +291,45 @@ UNIT(append_inplace) {
 		BoundedString zero2 = make_bounded_string("");
 
 		append_inplace(zero2, &string2);
+		COMPARE(string2, equ, "string");
+
+		DONE;
+	}
+}
+
+UNIT(append_cstr_inplace) {
+	SPEC("appends two strings") {
+		Char buffer [] = "abc....";
+		BoundedString string = {
+			.data = buffer,
+			.length = 3
+		};
+		const Char* suffix = "defg";
+
+		append_cstr_inplace(suffix, &string);
+		COMPARE(string, equ, "abcdefg");
+
+		DONE;
+	}
+	SPEC("works with 0-length string") {
+		Char buffer1 [] = "......";
+		BoundedString zero1 = {
+			.data = buffer1,
+			.length = 0
+		};
+		const Char* string1 = "string";
+
+		append_cstr_inplace(string1, &zero1);
+		COMPARE(zero1, equ, "string");
+
+		Char buffer2 [] = "string";
+		BoundedString string2 = {
+			.data = buffer2,
+			.length = 6
+		};
+		const Char* zero2 = "";
+
+		append_cstr_inplace(zero2, &string2);
 		COMPARE(string2, equ, "string");
 
 		DONE;
@@ -337,6 +375,7 @@ DRIVER {
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
 	TEST(append_inplace);
+	TEST(append_cstr_inplace);
 	TEST(copy_bounded_string);
 	TEST(free_bounded_string);
 }

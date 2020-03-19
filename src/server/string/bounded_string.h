@@ -59,6 +59,13 @@ string is large enough to hold the suffix.
 Void append_inplace(BoundedString suffix, BoundedString* string);
 
 /*
+Append a C-style string suffic to string, inplace (without making a new bounded string).
+Caller must do necssary memory management and ensure that the data buffer of
+string is large enough to hold the suffix.
+*/
+Void append_cstr_inplace(const Char* suffix, BoundedString* string);
+
+/*
 Copy source to destination, dynamically allocating the memory.
 Returns -1 if there's an error with malloc.
 Writes back to destination.

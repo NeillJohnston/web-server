@@ -100,6 +100,11 @@ Void append_inplace(BoundedString suffix, BoundedString* string) {
 	string->length += suffix.length;
 }
 
+Void append_cstr_inplace(const Char* suffix, BoundedString* string) {
+	strcpy(string->data + string->length, suffix);
+	string->length += strlen(suffix);
+}
+
 ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) {
 	destination->data = malloc(source.length);
 	if (destination->data == NULL) return -1;
