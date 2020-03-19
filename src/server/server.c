@@ -47,11 +47,11 @@ Void run_server(ServerConfig config, InternetServer server) {
 			// Print some information
 			// TODO: have a helper process that the server can talk to, and
 			// send information there instead
-			if (incoming.sa_family == AF_INET) {
-				Port port = ntohs(((InternetSocketAddress*) &incoming)->sin_port);
-				ULong addr = ntohl(((InternetSocketAddress*) &incoming)->sin_addr.s_addr);
-				printf("received connection from addr: %lx, port: %d\n", addr, port);
-			}
+			// if (incoming.sa_family == AF_INET) {
+			// 	Port port = ntohs(((InternetSocketAddress*) &incoming)->sin_port);
+			// 	ULong addr = ntohl(((InternetSocketAddress*) &incoming)->sin_addr.s_addr);
+			// 	printf("received connection from addr: %lx, port: %d\n", addr, port);
+			// }
 
 			close(connection);
 		}

@@ -28,6 +28,8 @@ static Void send_response(Socket socket, HttpResponse response) {
 	// TODO: find out how to handle these two errors gracefully
 	if (make_http_response_string(response, &response_string)) _exit(-1);
 	if (send(socket, response_string.data, response_string.length, 0) == -1) _exit(-1);
+
+	free_bounded_string(response_string);
 }
 
 /*
@@ -53,8 +55,15 @@ static Void be_worker(Socket socket, ServerConfig config) {
 		_exit(-1);
 	}
 
+	printf("%.*s %.*s\n", (int) request.method.length, request.method.data, (int) request.path.length, request.path.data);
+
 	HttpResponse response = respond(request, config);
 	send_response(socket, response);
+
+	free_streamed_string(&streamed_request_string);
+	free_bounded_string(request_string);
+	free_http_request(request);
+	free_http_response(response);
 
 	_exit(0);
 }
