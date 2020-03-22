@@ -336,6 +336,41 @@ UNIT(append_cstr_inplace) {
 	}
 }
 
+UNIT(trim_inplace) {
+	SPEC("trims whitespace") {
+		BoundedString string = make_bounded_string(" \t\r\n string\t \n\r\t");
+
+		trim_inplace(&string);
+		COMPARE(string, equ, "string");
+
+		DONE;
+	}
+	SPEC("trims nothing if it doesn't have to") {
+		BoundedString string = make_bounded_string("string");
+
+		trim_inplace(&string);
+		COMPARE(string, equ, "string");
+
+		DONE;
+	}
+	SPEC("works with 0-length strings") {
+		BoundedString string = make_bounded_string("");
+
+		trim_inplace(&string);
+		COMPARE(string, equ, "");
+
+		DONE;
+	}
+	SPEC("works with all-whitespace strings") {
+		BoundedString string = make_bounded_string(" \r\t\n ");
+
+		trim_inplace(&string);
+		COMPARE(string, equ, "");
+
+		DONE;
+	}
+}
+
 UNIT(copy_bounded_string) {
 	SPEC("produces an identical string with new memory") {
 		BoundedString source = make_bounded_string("hello");
@@ -376,6 +411,7 @@ DRIVER {
 	TEST(pop_token_inplace);
 	TEST(append_inplace);
 	TEST(append_cstr_inplace);
+	TEST(trim_inplace);
 	TEST(copy_bounded_string);
 	TEST(free_bounded_string);
 }

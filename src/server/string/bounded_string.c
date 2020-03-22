@@ -105,6 +105,20 @@ Void append_cstr_inplace(const Char* suffix, BoundedString* string) {
 	string->length += strlen(suffix);
 }
 
+Void trim_inplace(BoundedString* string) {
+	Size front = 0;
+	Size back = string->length-1;
+
+	while (is_whitespace(string->data[front]) && front <= back)
+		++front;
+	
+	while (is_whitespace(string->data[back]) && front <= back)
+		--back;
+	
+	string->data += front;
+	string->length = back - front + 1;
+}
+
 ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) {
 	destination->data = malloc(source.length);
 	if (destination->data == NULL) return -1;

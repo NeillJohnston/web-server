@@ -66,6 +66,11 @@ string is large enough to hold the suffix.
 Void append_cstr_inplace(const Char* suffix, BoundedString* string);
 
 /*
+Trim whitespace from the front and back of string.
+*/
+Void trim_inplace(BoundedString* string);
+
+/*
 Copy source to destination, dynamically allocating the memory.
 Returns -1 if there's an error with malloc.
 Writes back to destination.
