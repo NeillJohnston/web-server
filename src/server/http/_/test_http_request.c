@@ -5,52 +5,6 @@
 #include <string.h>
 #include <underscore.h>
 
-Char* SIMPLE =
-"\
-GET /index.html HTTP/1.0\n\
-\n\
-";
-
-Char* HEADERS =
-"\
-GET / HTTP/1.1\n\
-Host: 10.20.0.210:3000\n\
-Connection: keep-alive\n\
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36 Edg/80.0.361.62\n\
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\n\
-\n\
-";
-
-Char* CONTENT =
-"\
-POST /post HTTP/1.1\n\
-Host: localhost\n\
-Content-Type: key-value\n\
-Content-Length: 7\n\
-\n\
-a:1\n\
-b:2\
-";
-
-Char* INVALID1 =
-"\
-GET / HTTP1.1\n\
-\n\
-";
-
-Char* INVALID2 =
-"\
-GET / HTTP/1.1\n\
-Header without colon\n\
-\n\
-";
-
-Char* INVALID3 =
-"\
-GET / HTTP/1.1\n\
-Error: no newlines for content\n\
-";
-
 BoundedString make_bounded_string(Char* data) {
 	return (BoundedString) {
 		.data = data,
@@ -64,102 +18,150 @@ Bool equ(BoundedString bounded, const Char* string) {
 	return strncmp(bounded.data, string, length) == 0;
 }
 
-UNIT(parse_http_request) {
-	SPEC("correctly parses very simple requests") {
-		BoundedString request_string = make_bounded_string(SIMPLE);
+UNIT(parse_request_line) {
+	SPEC("parses valid request lines") {
+		// ... is the rest of the message
+		BoundedString get = make_bounded_string("GET / HTTP/1.1\r\n...");
+		BoundedString post = make_bounded_string("POST localhost/api/test HTTP/1.0\r\n...");
 		HttpRequest request;
 
-		OKAY(parse_http_request(request_string, &request));
-		COMPARE(request.method, equ, "GET");
-		COMPARE(request.path, equ, "/index.html");
-		ASSERT(request.version.major == 1);
-		ASSERT(request.version.minor == 0);
+		OKAY(parse_request_line(&get, &request));
+		ASSERT(get.length == 3);
+		ASSERT(request.method_code == GET);
+		ASSERT(request.request_uri.type == ABS_PATH);
+		COMPARE(request.request_uri.uri, equ, "/");
+		ASSERT(request.version.major == 1 && request.version.minor == 1);
+
+		OKAY(parse_request_line(&post, &request));
+		ASSERT(post.length == 3);
+		ASSERT(request.method_code == POST);
+		ASSERT(request.request_uri.type == ABSOLUTE);
+		COMPARE(request.request_uri.uri, equ, "localhost/api/test");
+		ASSERT(request.version.major == 1 && request.version.minor == 0);
+
+		DONE;
+	}
+	SPEC("errors for an invalid request line") {
+		BoundedString bad_method = make_bounded_string("NO / HTTP/1.1\r\n...");
+		BoundedString no_request_uri = make_bounded_string("GET HTTP/1.1\r\n...");
+		BoundedString bad_version = make_bounded_string("GET / HTTP/10\r\n...");
+		HttpRequest request;
+
+		ERROR(parse_request_line(&bad_method, &request));
+		ERROR(parse_request_line(&no_request_uri, &request));
+		ERROR(parse_request_line(&bad_version, &request));
+
+		DONE;
+	}
+}
+
+UNIT(parse_headers) {
+	SPEC("returns properly for zero headers") {
+		BoundedString zero = make_bounded_string("\r\n...");
+		HttpRequest request;
+
+		OKAY(parse_headers(&zero, &request));
+		ASSERT(zero.length == 3);
 		ASSERT(request.n_headers == 0);
-		COMPARE(request.content, equ, "");
-		COMPARE(request.raw, equ, SIMPLE);
-		
+
 		DONE;
 	}
-	SPEC("correctly parses requests with headers") {
-		BoundedString request_string = make_bounded_string(HEADERS);
+	SPEC("parses multiple headers") {
+		BoundedString two = make_bounded_string("Content-Type: text/json\r\nContent-Length: 4\r\n\r\n...");
+		HttpRequest request;
+
+		OKAY(parse_headers(&two, &request));
+		ASSERT(two.length == 3);
+		ASSERT(request.n_headers == 2);
+		ASSERT(request.headers[0].name_code == CONTENT_TYPE);
+		COMPARE(request.headers[0].value, equ, "text/json");
+		ASSERT(request.headers[1].name_code == CONTENT_LENGTH);
+		COMPARE(request.headers[1].value, equ, "4");
+
+		DONE;
+	}
+	SPEC("discards unsupported headers") {
+		BoundedString half_unsupported = make_bounded_string("Test: not supported\r\nAccept: text/html\r\n\r\n...");
+		HttpRequest request;
+
+		OKAY(parse_headers(&half_unsupported, &request));
+		ASSERT(half_unsupported.length == 3);
+		ASSERT(request.n_headers == 1);
+		ASSERT(request.headers[0].name_code == ACCEPT);
+		COMPARE(request.headers[0].value, equ, "text/html");
+
+		DONE;
+	}
+	SPEC("errors for invalid headers") {
+		BoundedString invalid = make_bounded_string("Content-Type: text/json\r\nthis aint no header\r\nContent-Length: 4\r\n\r\n...");
+		HttpRequest request;
+
+		ERROR(parse_headers(&invalid, &request));
+
+		DONE;
+	}
+}
+
+UNIT(parse_http_request) {
+	SPEC("parses simple requests") {
+		BoundedString request_string = make_bounded_string(
+			"GET / HTTP/1.1\r\n"
+			"User-Agent: Edge;Chromium\r\n"
+			"\r\n"
+		);
 		HttpRequest request;
 
 		OKAY(parse_http_request(request_string, &request));
-		COMPARE(request.method, equ, "GET");
-		COMPARE(request.path, equ, "/");
+		ASSERT(request.method_code == GET);
+		ASSERT(request.request_uri.type == ABS_PATH);
+		COMPARE(request.request_uri.uri, equ, "/");
 		ASSERT(request.version.major == 1);
 		ASSERT(request.version.minor == 1);
-		ASSERT(request.n_headers == 4);
-		COMPARE(request.headers[0].name, equ, "Host");
-		COMPARE(request.headers[0].value, equ, "10.20.0.210:3000");
-		COMPARE(request.headers[1].name, equ, "Connection");
-		COMPARE(request.headers[1].value, equ, "keep-alive");
-		COMPARE(request.headers[2].name, equ, "User-Agent");
-		COMPARE(request.headers[2].value, equ, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36 Edg/80.0.361.62");
-		COMPARE(request.headers[3].name, equ, "Accept");
-		COMPARE(request.headers[3].value, equ, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+		ASSERT(request.n_headers == 1);
+		ASSERT(request.headers[0].name_code == USER_AGENT);
+		COMPARE(request.headers[0].value, equ, "Edge;Chromium");
 		COMPARE(request.content, equ, "");
-		COMPARE(request.raw, equ, HEADERS);
+		ASSERT(bounded_string_equ(request.raw, request_string));
 
 		DONE;
 	}
-	SPEC("correctly parses requests with headers and content") {
-		BoundedString request_string = make_bounded_string(CONTENT);
+	SPEC("errors for invalid requests") {
+		BoundedString no_method = make_bounded_string(
+			"/ HTTP/1.1\r\n"
+			"User-Agent: Edge;Chromium\r\n"
+			"\r\n"
+		);
+		BoundedString bad_headers = make_bounded_string(
+			"/ HTTP/1.1\r\n"
+			"User-Agent: Edge;Chromium\r\n"
+			"No colon\r\n"
+			"\r\n"
+		);
+		BoundedString bad_version = make_bounded_string(
+			"GET / HTTP=1.1\r\n"
+			"User-Agent: Edge;Chromium\r\n"
+			"\r\n"
+		);
 		HttpRequest request;
 
-		OKAY(parse_http_request(request_string, &request));
-		COMPARE(request.method, equ, "POST");
-		COMPARE(request.path, equ, "/post");
-		ASSERT(request.version.major == 1);
-		ASSERT(request.version.minor == 1);
-		ASSERT(request.n_headers == 3);
-		COMPARE(request.headers[0].name, equ, "Host");
-		COMPARE(request.headers[0].value, equ, "localhost");
-		COMPARE(request.headers[1].name, equ, "Content-Type");
-		COMPARE(request.headers[1].value, equ, "key-value");
-		COMPARE(request.headers[2].name, equ, "Content-Length");
-		COMPARE(request.headers[2].value, equ, "7");
-		COMPARE(request.content, equ, "a:1\nb:2");
-		COMPARE(request.raw, equ, CONTENT);
-
-		DONE;
-	}
-	SPEC("errors for invalid HTTP requests") {
-		BoundedString invalid1 = make_bounded_string(INVALID1);
-		BoundedString invalid2 = make_bounded_string(INVALID2);
-		BoundedString invalid3 = make_bounded_string(INVALID3);
-		HttpRequest temp;
-
-		ERROR(parse_http_request(invalid1, &temp));
-		ERROR(parse_http_request(invalid2, &temp));
-		ERROR(parse_http_request(invalid3, &temp));
+		ERROR(parse_http_request(no_method, &request));
+		ERROR(parse_http_request(bad_headers, &request));
+		ERROR(parse_http_request(bad_version, &request));
 
 		DONE;
 	}
 }
 
 UNIT(free_http_request) {
-	SPEC("frees properly") {
-		BoundedString simple_string = make_bounded_string(SIMPLE);
-		BoundedString headers_string = make_bounded_string(HEADERS);
-		BoundedString content_string = make_bounded_string(CONTENT);
-		HttpRequest request;
-
-		if (parse_http_request(simple_string, &request) != 0) LEAVE("could not parse simple");
-		free_http_request(request);
-		
-		if (parse_http_request(headers_string, &request) != 0) LEAVE("could not parse headers");
-		free_http_request(request);
-		
-		if (parse_http_request(content_string, &request) != 0) LEAVE("could not parse content");
-		free_http_request(request);
-		
-		// No real "tests", just make sure free doesn't fail
+	SPEC("has been tested with Valgrind") {
+		ASSERT(false);
 		DONE;
 	}
 }
 
 DRIVER {
+	TEST(parse_request_line);
+	TEST(parse_headers);
 	TEST(parse_http_request);
 	TEST(free_http_request);
 }

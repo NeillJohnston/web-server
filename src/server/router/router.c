@@ -54,14 +54,16 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 		}
 	};
 
-	if (is_dynamic_path(request.path, config.api_prefix)) {
-		response.status_code = route_dynamic(config.root, request.path, &response);
+	// TODO: Handle non-abs_path request URIs
+
+	if (is_dynamic_path(request.request_uri.uri, config.api_prefix)) {
+		response.status_code = route_dynamic(config.root, request.request_uri.uri, &response);
 	}
-	else if (is_static_path(request.path)) {
-		response.status_code = route_static(config.root, request.path, &response);
+	else if (is_static_path(request.request_uri.uri)) {
+		response.status_code = route_static(config.root, request.request_uri.uri, &response);
 	}
 	else {
-		response.status_code = route_site(config.root, request.path, &response);
+		response.status_code = route_site(config.root, request.request_uri.uri, &response);
 	}
 
 	return response;

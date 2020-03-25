@@ -19,7 +19,7 @@ ErrorCode bounded_from_streamed_string(StreamedString* string, BoundedString* bo
 	current = &string->head;
 	Size back = 0;
 	while (current != NULL) {
-		// MARK return value is ignored, but return value is just one of the
+		// MARK: return value is ignored, but return value is just one of the
 		// arguments
 		memcpy(bounded->data+back, current->data, current->size);
 		back += current->size;

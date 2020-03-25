@@ -1,89 +1,142 @@
 #include "http.h"
+#include "protocol/header_names.h"
+#include "protocol/method_names.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /*
-Clean up dynamically-allocated memory and return ERROR_MALFORMED_REQUEST.
-Modifies request and performs free operations depending on stage.
-
-Helper for parse_http_request, when an error is detected it gets passed here.
+Compare a bounded string and a C-style string.
+MARK: I've copied this function like a million times, fix when refactoring
 */
-static ErrorCode clean_partial_parse(HttpRequest* request, Int stage) {
-	if (stage >= 1) {
-		free_bounded_string(request->raw);
-	}
-	if (stage >= 2) {
-		free(request->headers);
+static Bool bounded_equ_cstr(BoundedString bounded, const Char* cstr) {
+	if (bounded.length != strlen(cstr)) return false;
+	return memcmp(bounded.data, cstr, bounded.length) == 0;
+}
+
+/*
+Turn a string into a method code.
+*/
+static ErrorCode parse_method(BoundedString method, enum MethodCode* method_code) {
+	// MARK: enum abuse
+	// Might be worth it to include dummy iterator values in the enum:
+	// for (enum MethodCode i = METHOD_CODE_FIRST+1; i != METHOD_CODE_LAST; ++i)
+	for (enum MethodCode i = GET; i <= CONNECT; ++i) {
+		if (bounded_equ_cstr(method, METHOD_NAMES[i])) {
+			*method_code = i;
+			return 0;
+		}
 	}
 
-	return ERROR_MALFORMED_REQUEST;
+	return -1;
+}
+
+/*
+Consume and parse the request line for an HTTP request.
+*/
+static ErrorCode parse_request_line(BoundedString* request_string, HttpRequest* request) {
+	BoundedString line = pop_line_inplace(request_string);
+	BoundedString method = pop_token_inplace(&line);
+	if (method.length == 0) return -1;
+	BoundedString uri = pop_token_inplace(&line);
+	if (uri.length == 0) return -1;
+	BoundedString version_string = pop_token_inplace(&line);
+	if (version_string.length == 0) return -1;
+
+	if (parse_method(method, &request->method_code) != 0) return -1;
+
+	if (bounded_equ_cstr(uri, "*"))
+		request->request_uri.type = ASTERISK;
+	else if (uri.data[0] == '/')
+		request->request_uri.type = ABS_PATH;
+	else
+		request->request_uri.type = ABSOLUTE;
+	request->request_uri.uri = uri;
+
+	if (2 != sscanf(version_string.data, "HTTP/%d.%d", &request->version.major, &request->version.minor)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+/*
+Turn a string into a header name code.
+*/
+static ErrorCode parse_header_name(BoundedString header_name, enum HeaderNameCode* header_name_code) {
+	for (enum HeaderNameCode i = ITER_HEADER_NAME_CODES+1; i != END_HEADER_NAME_CODES; ++i) {
+		if (bounded_equ_cstr(header_name, HEADER_NAMES[i])) {
+			*header_name_code = i;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+/*
+Consume and parse the headers for an HTTP request.
+Assumes parse_request_line has run successfully.
+
+Supported headers are declared/defined in enum HeaderNameCodes and HEADER_NAMES.
+Any unsupported headers should just be cut from the final message, but
+malformed headers should trigger an error.
+*/
+static ErrorCode parse_headers(BoundedString* request_string, HttpRequest* request) {
+	// Count headers first so we only have to alloc once
+	request->n_headers = 0;
+	request->headers = NULL;
+	while (true) {
+		BoundedString line = pop_line_inplace(request_string);
+		if (line.length == 0) break;
+
+		Size name_end = 0;
+		while (line.data[name_end] != ':' && name_end < line.length)
+			++name_end;
+		if (name_end == line.length) return -1;
+		
+		BoundedString name = {
+			.data = line.data,
+			.length = name_end
+		};
+		enum HeaderNameCode name_code;
+
+		if (parse_header_name(name, &name_code) != 0) continue;
+
+		BoundedString value = {
+			.data = line.data + (name_end + 1),
+			.length = line.length - (name_end + 1)
+		};
+		trim_inplace(&value);
+
+		++request->n_headers;
+		request->headers = realloc(request->headers, request->n_headers * sizeof(HttpHeader));
+		if (request->headers == NULL) return -1;
+		request->headers[request->n_headers-1] = (HttpHeader) {
+			.name_code = name_code,
+			.value = value
+		};
+	}
+
+	return 0;
 }
 
 ErrorCode parse_http_request(BoundedString request_string, HttpRequest* request) {
-	ErrorCode attempt_copy = copy_bounded_string(request_string, &request->raw);
-	if (attempt_copy != 0) return -1;
-
-	// Copy of raw so that we can pop lines/tokens and use it as backing data
-	BoundedString raw = request->raw;
-
-	{ // Stage 1: parse the first line - method, path, and version
-		BoundedString line = pop_line_inplace(&raw);
-		if (line.length == 0) return clean_partial_parse(request, 1);
-
-		request->method = pop_token_inplace(&line);
-		if (request->method.length == 0) return clean_partial_parse(request, 1);
-
-		request->path = pop_token_inplace(&line);
-		if (request->path.length == 0) return clean_partial_parse(request, 1);
-
-		BoundedString version_string = pop_token_inplace(&line);
-		if (version_string.length == 0) return clean_partial_parse(request, 1);
-		Int n_version_tokens = sscanf(
-			version_string.data, "HTTP/%u.%u",
-			&request->version.major, &request->version.minor
-		);
-		if (n_version_tokens != 2) return clean_partial_parse(request, 1); 
-	}
-	{ // Stage 2: count headers, allocate space for header array
-		// Save raw first so we can return to our previous state next stage
-		BoundedString _raw = raw;
-		request->n_headers = 0;
-
-		while (true) {
-			BoundedString line = pop_line_inplace(&raw);
-			if (line.length == 0) break;
-			++request->n_headers;
-		}
-		request->headers = (HttpHeader*) calloc(request->n_headers, sizeof(HttpHeader));
-
-		raw = _raw;
-	}
-	{ // Stage 3: parse headers
-		for (Size i = 0; i < request->n_headers; ++i) {
-			BoundedString line = pop_line_inplace(&raw);
-
-			BoundedString name = pop_token_inplace(&line);
-			if (name.length == 0) return clean_partial_parse(request, 3);
-			if (name.data[name.length-1] != ':') return clean_partial_parse(request, 3);
-			--name.length;
-
-			// MARK allows 0-length header values, haven't found evidence that
-			// this isn't allowed
-			BoundedString value = line;
-
-			request->headers[i] = (HttpHeader) {
-				.name = name,
-				.value = value
-			};
-		}
-	}
-	{ // Stage 4: parse content
-		if (raw.length == 0) return clean_partial_parse(request, 4);
-		pop_line_inplace(&raw);
-		request->content = raw;
-	}
+	if (copy_bounded_string(request_string, &request->raw) != 0) return -1;
+	
+	BoundedString mutable_raw = request->raw;
+	
+	// Keep modifying the request string
+	ErrorCode attempt;
+	attempt = parse_request_line(&mutable_raw, request);
+	if (attempt != 0) return attempt;
+	attempt = parse_headers(&mutable_raw, request);
+	if (attempt != 0) return attempt;
+	
+	// The rest is the message body (content)
+	// TODO: check standard and see if Content-Length has to be used
+	request->content = mutable_raw;
 
 	return 0;
 }

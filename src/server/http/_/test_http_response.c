@@ -54,11 +54,11 @@ UNIT(make_http_response_string) {
 	SPEC("turns complex responses into strings") {
 		HttpHeader headers [2] = {
 			{
-				.name = make_bounded_string("Content-Length"),
+				.name_code = CONTENT_LENGTH,
 				.value = make_bounded_string("29")
 			},
 			{
-				.name = make_bounded_string("Content-Type"),
+				.name_code = CONTENT_TYPE,
 				.value = make_bounded_string("text/html")
 
 			}
@@ -97,11 +97,11 @@ UNIT(free_http_response) {
 		// Why does this test require so much setup
 		// It's not even going to do anything
 		HttpHeader header1 = {
-			.name = make_dynamic_bounded_string("Content-Length"),
+				.name_code = CONTENT_LENGTH,
 			.value = make_dynamic_bounded_string("7")
 		};
 		HttpHeader header2 = {
-			.name = make_dynamic_bounded_string("Content-Type"),
+				.name_code = CONTENT_TYPE,
 			.value = make_dynamic_bounded_string("text/plain")
 		};
 		HttpHeader* headers = malloc(2*sizeof(HttpHeader));

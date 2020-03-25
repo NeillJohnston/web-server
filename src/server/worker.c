@@ -1,5 +1,6 @@
 #include "server.h"
 #include "http/http.h"
+#include "http/protocol/method_names.h"
 #include "router/router.h"
 #include "string/streamed_string.h"
 #include "string/bounded_string.h"
@@ -55,7 +56,7 @@ static Void be_worker(Socket socket, ServerConfig config) {
 		_exit(-1);
 	}
 
-	printf("%.*s %.*s\n", (int) request.method.length, request.method.data, (int) request.path.length, request.path.data);
+	printf("%s %.*s\n", METHOD_NAMES[request.method_code], (int) request.request_uri.uri.length, request.request_uri.uri.data);
 
 	HttpResponse response = respond(request, config);
 	send_response(socket, response);

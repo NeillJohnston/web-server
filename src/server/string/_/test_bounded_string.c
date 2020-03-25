@@ -1,5 +1,5 @@
 #include "../bounded_string.c"
-// MARK Not a big fan of needing to include two C files, makes this somewhat
+// MARK: Not a big fan of needing to include two C files, makes this somewhat
 // of an integration test
 #include "../streamed_string.c"
 

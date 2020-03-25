@@ -5,6 +5,41 @@
 static const ErrorCode ERROR_MALFORMED_REQUEST = 1;
 
 /*
+Supported request methods.
+*/
+enum MethodCode {
+	GET = 1,
+	POST,
+	PUT,
+	DELETE,
+	OPTIONS,
+	HEAD,
+	TRACE,
+	CONNECT
+};
+
+/*
+Supported headers.
+*/
+enum HeaderNameCode {
+	ITER_HEADER_NAME_CODES = 0,
+	ACCEPT,
+	CONNECTION,
+	CONTENT_LENGTH,
+	CONTENT_TYPE,
+	HOST,
+	USER_AGENT,
+	END_HEADER_NAME_CODES
+};
+
+enum RequestUriType {
+	ASTERISK,
+	ABSOLUTE,
+	ABS_PATH,
+	AUTHORITY
+};
+
+/*
 Structured form of an HTTP version.
 */
 typedef struct {
@@ -16,21 +51,28 @@ typedef struct {
 Structured form of an HTTP header.
 */
 typedef struct {
-	BoundedString name;
+	enum HeaderNameCode name_code;
 	BoundedString value;
 } HttpHeader;
+
+/*
+Structured form of an HTTP request URI.
+*/
+typedef struct {
+	enum RequestUriType type;
+	BoundedString uri;
+} HttpRequestUri;
 
 /*
 Structured form of an HTTP request.
 Includes all the necessary data (for HTTP version < 2) and the original string
 the request comes from (raw).
-
-MARK might be nice to have an enum for method instead of passing magic strings
-around
+Raw is the "backing data" for the rest of the fields - the path, header
+values, and content are all substrings of raw.
 */
 typedef struct {
-	BoundedString method;
-	BoundedString path;
+	enum MethodCode method_code;
+	HttpRequestUri request_uri;
 	HttpVersion version;
 
 	Size n_headers;
@@ -43,8 +85,7 @@ typedef struct {
 
 /*
 Structured form of an HTTP response.
-Includes all the necessary data (for HTTP version < 2) and the original string
-the request comes from (raw).
+Includes all the necessary data (for HTTP version < 2).
 */
 typedef struct {
 	HttpVersion version;
