@@ -49,7 +49,7 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 		.n_headers = 0,
 		.headers = NULL,
 		.content = {
-			.data = "",
+			.data = NULL,
 			.length = 0
 		}
 	};
