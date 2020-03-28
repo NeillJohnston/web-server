@@ -119,12 +119,7 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 	if (sqlite3_bind_text(find_route, 1, method, -1, SQLITE_STATIC) != 0) return make_500();
 	if (sqlite3_bind_text(find_route, 2, uri.data, uri.length, SQLITE_STATIC) != 0) return make_500();
 	
-	// No route found, try static routing to the request URI
-	if (first_row(find_route) != SQLITE_ROW) {
-		sqlite3_finalize(find_route);
-		route(uri, ROUTE_STATIC, config, &response);
-	}
-	else {
+	if (first_row(find_route) == SQLITE_ROW) {
 		Char path_data [PATH_MAX];
 		BoundedString path = { .data = path_data };
 		Int type;
@@ -132,6 +127,11 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 		read_routes_row(find_route, &path, &type);
 		sqlite3_finalize(find_route);
 		route(path, type, config, &response);
+	}
+	// No route found, try static routing to the request URI
+	else {
+		sqlite3_finalize(find_route);
+		route(uri, ROUTE_STATIC, config, &response);
 	}
 
 	// Try re-routing for errors
