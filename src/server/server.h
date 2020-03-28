@@ -12,11 +12,11 @@ typedef FileDescriptor Socket;
 typedef struct {
 	// Necessary
 	Port port;
-	Int backlog;
 	BoundedString root;
+	BoundedString db_path;
 	// Optional
+	Int backlog;
 	Bool local;
-	BoundedString api_prefix;
 } ServerConfig;
 
 typedef struct {

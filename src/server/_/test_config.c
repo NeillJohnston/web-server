@@ -16,10 +16,11 @@ UNIT(parse_config) {
 
 		OKAY(parse_config("src/server/_/maximum.cfg", &config));
 		
-		ASSERT(config.backlog == 10);
 		ASSERT(config.port == 3000);
 		COMPARE(config.root, equ, "out/public/");
+		COMPARE(config.db_path, equ, "out/test.db");
 		
+		ASSERT(config.backlog == 10);
 		ASSERT(config.local == true);
 
 		DONE;
@@ -29,9 +30,9 @@ UNIT(parse_config) {
 
 		OKAY(parse_config("src/server/_/minimum.cfg", &config));
 
-		ASSERT(config.backlog == 11);
 		ASSERT(config.port == 3001);
 		COMPARE(config.root, equ, "out/public/");
+		COMPARE(config.db_path, equ, "out/test.db");
 
 		DONE;
 	}

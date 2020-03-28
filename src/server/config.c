@@ -7,14 +7,16 @@
 typedef __uint64_t Flags;
 
 static const Char* KEY_PORT = "port";
-static const Char* KEY_BACKLOG = "back";
 static const Char* KEY_ROOT = "root";
+static const Char* KEY_DB_PATH = "db";
+
+static const Char* KEY_BACKLOG = "back";
 static const Char* KEY_LOCAL = "local";
 
 // Flags for all of the necessary variables
 static const Flags FLAG_PORT = 1<<0;
-static const Flags FLAG_BACKLOG = 1<<1;
-static const Flags FLAG_ROOT = 1<<2;
+static const Flags FLAG_ROOT = 1<<1;
+static const Flags FLAG_DB_PATH = 1<<2;
 
 static const Char* VALUE_TRUE = "true";
 static const Char* VALUE_FALSE = "false";
@@ -44,10 +46,10 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 	BoundedString mut_config_string = config_string;
 
 	// Initialize optionals with defaults
+	config->backlog = 10;
 	config->local = true;
-	config->api_prefix = (BoundedString) { .data = "", .length = 0 };
 
-	Flags required = FLAG_PORT | FLAG_BACKLOG | FLAG_ROOT;
+	Flags required = FLAG_PORT | FLAG_ROOT | FLAG_DB_PATH;
 
 	while (mut_config_string.length > 0) {
 		BoundedString pair = pop_line_inplace(&mut_config_string);
@@ -56,25 +58,22 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 
 		// Skips blank lines and comments
 		if (key.length == 0) continue;
-		else if (key.length == 1 && key.data[0] == '#') continue;
+		else if (key.data[0] == '#') continue;
 
 		if (bounded_equ_cstr(key, KEY_PORT)) {
-			Port port;
-			if (sscanf(value.data, "%hu", &port) == 0) return ERROR_BAD_CONFIG_VALUE;
-			config->port = port;
+			if (sscanf(value.data, "%hu", &config->port) == 0) return ERROR_BAD_CONFIG_VALUE;
 			required = unset(required, FLAG_PORT);
 		}
-		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
-			Int backlog;
-			if (sscanf(value.data, "%d", &backlog) == 0) return ERROR_BAD_CONFIG_VALUE;
-			config->backlog = backlog;
-			required = unset(required, FLAG_BACKLOG);
-		}
 		else if (bounded_equ_cstr(key, KEY_ROOT)) {
-			BoundedString root;
-			if (copy_bounded_string(value, &root)) return -1;
-			config->root = root;
+			if (copy_bounded_string(value, &config->root) != 0) return -1;
 			required = unset(required, FLAG_ROOT);
+		}
+		else if (bounded_equ_cstr(key, KEY_DB_PATH)) {
+			if (copy_bounded_string(value, &config->db_path) != 0) return -1;
+			required = unset(required, FLAG_DB_PATH);
+		}
+		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
+			if (sscanf(value.data, "%d", &config->backlog) == 0) return ERROR_BAD_CONFIG_VALUE;
 		}
 		else if (bounded_equ_cstr(key, KEY_LOCAL)) {
 			if (bounded_equ_cstr(value, VALUE_TRUE)) {
