@@ -10,95 +10,98 @@ BoundedString make_bounded_string(Char* data) {
 	};
 }
 
+HttpRequest make_request(Char* uri, enum MethodCode method_code) {
+	return (HttpRequest) {
+		.method_code = method_code,
+		.request_uri = {
+			.type = ABS_PATH,
+			.uri = make_bounded_string(uri)
+		},
+		.version = {
+			.major = 1,
+			.minor = 1
+		},
+		.n_headers = 0
+	};
+}
+
 typedef ULong Flags;
 
-const Flags ROUTE_SITE = 1<<0;
-const Flags ROUTE_STATIC = 1<<1;
-const Flags ROUTE_DYNAMIC = 1<<2;
+const Flags FLAG_STATIC = 1<<1;
+const Flags FLAG_DYNAMIC = 1<<2;
 Flags routed_where;
 
-UInt route_site(BoundedString root, BoundedString route, HttpResponse* response) {
-	routed_where |= ROUTE_SITE;
+UInt route_static(BoundedString root, BoundedString path, HttpResponse* response) {
+	routed_where |= FLAG_STATIC;
+	// Triggered by the error reroute testcase
+	if (path.data[0] == '*') return 404;
 	return 200;
 }
 
-UInt route_static(BoundedString root, BoundedString route, HttpResponse* response) {
-	routed_where |= ROUTE_STATIC;
-	return 200;
-}
-
-UInt route_dynamic(BoundedString root, BoundedString route, HttpResponse* response) {
-	routed_where |= ROUTE_DYNAMIC;
+UInt route_dynamic(BoundedString root, BoundedString path, HttpResponse* response) {
+	routed_where |= FLAG_DYNAMIC;
+	// Should be triggered by the error reroute testcase
+	if (path.data[0] == '*') {
+		response->content.length = 404;
+		return 200;
+	}
 	return 200;
 }
 
 UNIT(respond) {
-	SPEC("correctly routes to site paths") {
-		HttpRequest request = {
-			.method = make_bounded_string("GET"),
-			.path = make_bounded_string("/blog"),
-			.version = {
-				.major = 1,
-				.minor = 1
-			},
-			.n_headers = 0,
-			.content = make_bounded_string("")
-		};
+	SPEC("looks up the correct route in database") {
+		// Make sure the route and content matches test.db or obviously the test will fail
+		HttpRequest request1 = make_request("/", GET);
+		HttpRequest request2 = make_request("/blog", GET);
+		HttpRequest request3 = make_request("/api/post", POST);
 		ServerConfig config = {
-			.root = make_bounded_string("src/server/router/_/root/"),
-			.api_prefix = make_bounded_string("/api/")
+			.db_path = make_bounded_string("src/server/router/_/test.db")
 		};
+		HttpResponse response;
 
 		routed_where = 0;
-		HttpResponse response = respond(request, config);
+		response = respond(request1, config);
 		ASSERT(response.status_code == 200);
-		ASSERT(routed_where == ROUTE_SITE);
+		ASSERT(routed_where == FLAG_STATIC);
+
+		routed_where = 0;
+		response = respond(request2, config);
+		ASSERT(response.status_code == 200);
+		ASSERT(routed_where == FLAG_STATIC);
+
+		routed_where = 0;
+		response = respond(request3, config);
+		ASSERT(response.status_code == 200);
+		ASSERT(routed_where == FLAG_DYNAMIC);
 
 		DONE;
 	}
-	SPEC("correctly routes to static paths") {
-		HttpRequest request = {
-			.method = make_bounded_string("GET"),
-			.path = make_bounded_string("/content/image.jpeg"),
-			.version = {
-				.major = 1,
-				.minor = 1
-			},
-			.n_headers = 0,
-			.content = make_bounded_string("")
-		};
+	SPEC("routes unknown routes to static") {
+		HttpRequest request1 = make_request("/style.css", GET);
 		ServerConfig config = {
-			.root = make_bounded_string("src/server/router/_/root/"),
-			.api_prefix = make_bounded_string("/api/")
+			.db_path = make_bounded_string("src/server/router/_/test.db")
 		};
+		HttpResponse response;
 
 		routed_where = 0;
-		HttpResponse response = respond(request, config);
+		response = respond(request1, config);
 		ASSERT(response.status_code == 200);
-		ASSERT(routed_where == ROUTE_STATIC);
+		ASSERT(routed_where == FLAG_STATIC);
 
 		DONE;
 	}
-	SPEC("correctly routes to dynamic (api) paths") {
-		HttpRequest request = {
-			.method = make_bounded_string("GET"),
-			.path = make_bounded_string("/api/get-something"),
-			.version = {
-				.major = 1,
-				.minor = 1
-			},
-			.n_headers = 0,
-			.content = make_bounded_string("")
-		};
+	SPEC("re-routes to special error routes") {
+		HttpRequest request1 = make_request("*nonexistent", GET);
 		ServerConfig config = {
-			.root = make_bounded_string("src/server/router/_/root/"),
-			.api_prefix = make_bounded_string("/api/")
+			.db_path = make_bounded_string("src/server/router/_/test.db")
 		};
+		HttpResponse response;
 
 		routed_where = 0;
-		HttpResponse response = respond(request, config);
-		ASSERT(response.status_code == 200);
-		ASSERT(routed_where == ROUTE_DYNAMIC);
+		response = respond(request1, config);
+		ASSERT(response.status_code == 404);
+		ASSERT(response.content.length == 404);
+		ASSERT(routed_where == (FLAG_STATIC | FLAG_DYNAMIC));
 
 		DONE;
 	}

@@ -1,5 +1,5 @@
 OBJECTS = router.o
-SUB = site static dynamic
+SUB = static dynamic
 
 all: $(OBJECTS) $(SUB)
 

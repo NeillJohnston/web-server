@@ -32,7 +32,7 @@ VERBOSE = 2
 # Make sure UNIT= is declared when running make runtest
 .PHONY: runtest
 runtest:
-	gcc $(FLAGS) -g -I include -D_VERBOSE=$(VERBOSE) $(UNIT) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
+	gcc $(FLAGS) -g -I include -D_VERBOSE=$(VERBOSE) $(UNIT) $(BIN)/sqlite3.o $(SQLITE_LINKS) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
 	./test/$(subst .,_,$(subst /,_,$(UNIT))).o
 
 .PHONY: runalltests

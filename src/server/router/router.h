@@ -3,6 +3,11 @@
 #include "../server.h"
 #include "../http/http.h"
 
+enum RouteType {
+	ROUTE_STATIC = 0,
+	ROUTE_DYNAMIC = 1
+};
+
 /*
 The server routes HTTP requests to three different sub-routers -
 -	Site, which handles requests for top-level routes (e.g. /)
