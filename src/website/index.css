@@ -5,7 +5,7 @@ div#title {
 
 div#title > h1 {
   color: white;
-  font-size: 60px;
+  font-size: 48px;
 }
 
 div#title > h2 {
@@ -28,35 +28,10 @@ canvas#tree {
   z-index: -1;
 }
 
-div.rollover-banner-left {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  white-space: nowrap;
-}
-
-div.rollover-banner-left > p {
-  float: right;
-  background-color: white;
-  border-radius: 1000px;
-  font-size: 12px;
-  padding: 4px;
-  overflow: hidden;
-  
-  width: 6px;
-  transition: width 0.4s;
-}
-
-div.rollover-banner-left:hover > p {
-  width: 100%;
-}
+/* Extensions */
 
 div.nav {
   text-align: center;
-}
-
-div.main {
-  margin: 40px 25%;
 }
 
 div.main > h2 {

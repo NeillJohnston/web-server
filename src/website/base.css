@@ -51,3 +51,30 @@ div.nav > * {
 div.nav > a {
   color: var(--black);
 }
+
+div.main {
+  margin: 40px 25%;
+}
+
+div.rollover-banner-left {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  white-space: nowrap;
+}
+
+div.rollover-banner-left > p {
+  float: right;
+  background-color: white;
+  border-radius: 1000px;
+  font-size: 12px;
+  padding: 4px;
+  overflow: hidden;
+  
+  width: 6px;
+  transition: width 0.4s;
+}
+
+div.rollover-banner-left:hover > p {
+  width: 100%;
+}
