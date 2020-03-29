@@ -5,10 +5,9 @@
 
 #include <linux/limits.h>
 #include <sqlite3.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <stdio.h>
 
 /*
 SQL query to find a route with a given method/route in the database.

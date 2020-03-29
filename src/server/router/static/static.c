@@ -11,7 +11,8 @@ UInt route_static(BoundedString root, BoundedString path, HttpResponse* response
 		.length = 0
 	};
 
-	// Check for suspicious paths (paths with a "..")
+	if (root.length + path.length + 1 > PATH_MAX) return 500;
+	// Check for invalid paths (paths with a "..")
 	for (Size i = 0; i < path.length-1; ++i)
 		if (path.data[i] == '.' && path.data[i+1] == '.') return 403;
 

@@ -18,8 +18,6 @@ Sometimes a function (unit) has helper functions (which should be static), to im
 
 ## Output
 
-The root of all output is `out/`.
+The root of compiled object files is `out/`.
 
 The server is a single binary executable named `server`.
-
-The website files go to `out/public/`.
