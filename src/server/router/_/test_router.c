@@ -1,4 +1,6 @@
 #include "../router.c"
+#include "../../string/bounded_string.c"
+#include "../../http/http_response.c"
 
 #include <string.h>
 #include <underscore.h>

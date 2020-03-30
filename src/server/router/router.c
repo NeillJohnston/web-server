@@ -1,3 +1,8 @@
+// MARK: This entire C file is ~200 lines and implements ONE FUNCTION for
+// which it has ONE UNIT TEST.
+// Granted, the presence of SQLite makes it hard to test, but there's still
+// a lot of untested code being used.
+
 #include "router.h"
 #include "dynamic/dynamic.h"
 #include "static/static.h"
@@ -101,6 +106,34 @@ static Void route(BoundedString path, Int type, ServerConfig config, HttpRespons
 	}
 }
 
+/*
+Test if a path has a given extension.
+*/
+static Bool has_extension(BoundedString path, const Char* extension) {
+	Size i = path.length;
+	Size j = strlen(extension);
+
+	if (j+1 > i) return false;
+
+	while (true) {
+		if (j == 0) return path.data[i-1] == '.';
+		if (path.data[i-1] != extension[j-1]) return false;
+		--i;
+		--j;
+	}
+}
+
+/*
+Make a bounded string out of a C-string.
+MARK: exceptionally lazy.
+*/
+static BoundedString make_bounded(Char* data) {
+	return (BoundedString) {
+		.data = data,
+		.length = strlen(data)
+	};
+}
+
 HttpResponse respond(HttpRequest request, ServerConfig config) {
 	Char buffer [PATH_MAX];
 	HttpResponse response = BLANK_RESPONSE;
@@ -156,6 +189,39 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 	}
 
 	sqlite3_close(database);
+
+	// "Supported" content types
+	// MARK: bad design, bad logic, heavy copy-pasta - this is truly production code
+	if (has_extension(uri, "html")) {
+		if (add_http_header(CONTENT_TYPE, make_bounded("text/html"), &response) != 0) {
+			response.n_headers = 0;
+			response.headers = NULL;
+		}
+	}
+	else if (has_extension(uri, "css")) {
+		if (add_http_header(CONTENT_TYPE, make_bounded("text/css"), &response) != 0) {
+			response.n_headers = 0;
+			response.headers = NULL;
+		}
+	}
+	else if (has_extension(uri, "js")) {
+		if (add_http_header(CONTENT_TYPE, make_bounded("text/js"), &response) != 0) {
+			response.n_headers = 0;
+			response.headers = NULL;
+		}
+	}
+	else if (has_extension(uri, "txt")) {
+		if (add_http_header(CONTENT_TYPE, make_bounded("text/plain"), &response) != 0) {
+			response.n_headers = 0;
+			response.headers = NULL;
+		}
+	}
+	else {
+		if (add_http_header(CONTENT_TYPE, make_bounded("text/html"), &response) != 0) {
+			response.n_headers = 0;
+			response.headers = NULL;
+		}
+	}
 
 	return response;
 }
