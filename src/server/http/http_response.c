@@ -6,6 +6,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+ErrorCode add_http_header(enum HeaderNameCode name_code, BoundedString value, HttpResponse* response) {
+	++response->n_headers;
+	response->headers = realloc(response->headers, response->n_headers * sizeof(HttpHeader));
+	if (response->headers == NULL) return -1;
+	HttpHeader* header = &response->headers[response->n_headers-1];
+
+	header->name_code = name_code;
+	header->value.data = malloc(value.length);
+	header->value.length = value.length;
+	if (header->value.data == NULL) return -1;
+
+	memcpy(header->value.data, value.data, value.length);
+
+	return 0;
+}
+
 ErrorCode make_http_response_string(HttpResponse response, BoundedString* response_string) {
 	const Char* status_message = STATUS_MESSAGES[response.status_code];
 

@@ -108,6 +108,13 @@ Both request_string and request can be freed independently after calling.
 ErrorCode parse_http_request(BoundedString request_string, HttpRequest* request);
 
 /*
+Add a header to an HTTP response object.
+
+Copies the given value.
+*/
+ErrorCode add_http_header(enum HeaderNameCode name_code, BoundedString value, HttpResponse* response);
+
+/*
 Turn a structured HTTP response into a raw response string.
 Writes back to response_string.
 

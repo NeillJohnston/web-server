@@ -26,6 +26,43 @@ Bool equ(BoundedString bounded, const Char* string) {
 	return strncmp(bounded.data, string, length) == 0;
 }
 
+UNIT(add_http_header) {
+	SPEC("adds headers to response") {
+		enum HeaderNameCode name_code1 = CONTENT_TYPE;
+		BoundedString value1 = make_bounded_string("text/html");
+		enum HeaderNameCode name_code2 = CONTENT_LENGTH;
+		BoundedString value2 = make_bounded_string("100");
+		HttpResponse response = {
+			.version = {
+				.major = 1,
+				.minor = 0
+			},
+			.status_code = 200,
+
+			.n_headers = 0,
+			.headers = NULL,
+	
+			.content = make_bounded_string("")
+		};
+
+		if (add_http_header(name_code1, value1, &response) != 0) LEAVE("could not add header");
+
+		ASSERT(response.n_headers == 1);
+		ASSERT(response.headers[0].name_code == name_code1);
+		COMPARE(response.headers[0].value, bounded_string_equ, value1);
+
+		if (add_http_header(name_code2, value2, &response) != 0) LEAVE("could not add header");
+		
+		ASSERT(response.n_headers == 2);
+		ASSERT(response.headers[1].name_code == name_code2);
+		COMPARE(response.headers[1].value, bounded_string_equ, value2);
+		// Make sure we don't modify the old data on accident
+		ASSERT(response.headers[0].name_code == name_code1);
+		COMPARE(response.headers[0].value, bounded_string_equ, value1);
+
+		DONE;
+	}
+}
 
 UNIT(make_http_response_string) {
 	SPEC("turns simple responses into strings") {
@@ -128,6 +165,7 @@ UNIT(free_http_response) {
 }
 
 DRIVER {
+	TEST(add_http_header);
 	TEST(make_http_response_string);
 	TEST(free_http_response);
 }
