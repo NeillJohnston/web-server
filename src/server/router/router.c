@@ -123,17 +123,6 @@ static Bool has_extension(BoundedString path, const Char* extension) {
 	}
 }
 
-/*
-Make a bounded string out of a C-string.
-MARK: exceptionally lazy.
-*/
-static BoundedString make_bounded(Char* data) {
-	return (BoundedString) {
-		.data = data,
-		.length = strlen(data)
-	};
-}
-
 HttpResponse respond(HttpRequest request, ServerConfig config) {
 	Char buffer [PATH_MAX];
 	HttpResponse response = BLANK_RESPONSE;
@@ -190,38 +179,27 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 
 	sqlite3_close(database);
 
-	// "Supported" content types
-	// MARK: bad design, bad logic, heavy copy-pasta - this is truly production code
-	if (has_extension(uri, "html")) {
-		if (add_http_header(CONTENT_TYPE, make_bounded("text/html"), &response) != 0) {
-			response.n_headers = 0;
-			response.headers = NULL;
-		}
-	}
-	else if (has_extension(uri, "css")) {
-		if (add_http_header(CONTENT_TYPE, make_bounded("text/css"), &response) != 0) {
-			response.n_headers = 0;
-			response.headers = NULL;
-		}
-	}
-	else if (has_extension(uri, "js")) {
-		if (add_http_header(CONTENT_TYPE, make_bounded("text/js"), &response) != 0) {
-			response.n_headers = 0;
-			response.headers = NULL;
-		}
-	}
-	else if (has_extension(uri, "txt")) {
-		if (add_http_header(CONTENT_TYPE, make_bounded("text/plain"), &response) != 0) {
-			response.n_headers = 0;
-			response.headers = NULL;
-		}
-	}
-	else {
-		if (add_http_header(CONTENT_TYPE, make_bounded("text/html"), &response) != 0) {
-			response.n_headers = 0;
-			response.headers = NULL;
-		}
-	}
+	// MARK: For refactor, separate and test this logic
+
+	// Content type header
+	char* content_type_data = "text/html";
+	if (has_extension(uri, "html")) content_type_data = "text/html";
+	else if (has_extension(uri, "css")) content_type_data = "text/css";
+	else if (has_extension(uri, "js")) content_type_data = "text/js";
+	else if (has_extension(uri, "txt")) content_type_data = "text/plain";
+	BoundedString content_type = {
+		.data = content_type_data,
+		.length = strlen(content_type_data)
+	};
+	if (add_http_header(CONTENT_TYPE, content_type, &response) != 0) return make_500();
+
+	// Content length header
+	sprintf(buffer, "%lu", response.content.length);
+	BoundedString content_length = {
+		.data = buffer,
+		.length = strlen(buffer)
+	};
+	if (add_http_header(CONTENT_LENGTH, content_length, &response) != 0) return make_500();
 
 	return response;
 }
