@@ -19,6 +19,7 @@ typedef struct {
 	Int backlog;
 	Bool local;
 	BoundedString cert_path;
+	BoundedString pkey_path;
 } ServerConfig;
 
 typedef struct {

@@ -37,6 +37,11 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	cert_path[config.cert_path.length] = '\0';
 	if (SSL_CTX_use_certificate_file(server->context, cert_path, SSL_FILETYPE_PEM) != 0) return ERROR_COULD_NOT_SET_UP;
 
+	Char pkey_path [PATH_MAX];
+	memcpy(pkey_path, config.pkey_path.data, config.pkey_path.length);
+	pkey_path[config.pkey_path.length] = '\0';
+	if (SSL_CTX_use_PrivateKey_file(server->context, pkey_path, SSL_FILETYPE_PEM) != 0) return ERROR_COULD_NOT_SET_UP;
+
 	return 0;
 }
 

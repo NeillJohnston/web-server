@@ -10,6 +10,7 @@ static const Char* KEY_PORT = "port";
 static const Char* KEY_ROOT = "root";
 static const Char* KEY_DB_PATH = "db";
 static const Char* KEY_CERT_PATH = "cert";
+static const Char* KEY_PKEY_PATH = "pkey";
 
 static const Char* KEY_BACKLOG = "back";
 static const Char* KEY_LOCAL = "local";
@@ -19,6 +20,7 @@ static const Flags FLAG_PORT = 1<<0;
 static const Flags FLAG_ROOT = 1<<1;
 static const Flags FLAG_DB_PATH = 1<<2;
 static const Flags FLAG_CERT_PATH = 1<<3;
+static const Flags FLAG_PKEY_PATH = 1<<4;
 
 static const Char* VALUE_TRUE = "true";
 static const Char* VALUE_FALSE = "false";
@@ -51,7 +53,7 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 	config->backlog = 10;
 	config->local = true;
 
-	Flags required = FLAG_PORT | FLAG_ROOT | FLAG_DB_PATH;
+	Flags required = FLAG_PORT | FLAG_ROOT | FLAG_DB_PATH | FLAG_CERT_PATH | FLAG_PKEY_PATH;
 
 	while (mut_config_string.length > 0) {
 		BoundedString pair = pop_line_inplace(&mut_config_string);
@@ -77,6 +79,10 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 		else if (bounded_equ_cstr(key, KEY_CERT_PATH)) {
 			if (copy_bounded_string(value, &config->cert_path) != 0) return -1;
 			required = unset(required, FLAG_CERT_PATH);
+		}
+		else if (bounded_equ_cstr(key, KEY_PKEY_PATH)) {
+			if (copy_bounded_string(value, &config->pkey_path) != 0) return -1;
+			required = unset(required, FLAG_PKEY_PATH);
 		}
 		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
 			if (sscanf(value.data, "%d", &config->backlog) == 0) return ERROR_BAD_CONFIG_VALUE;
