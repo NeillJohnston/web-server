@@ -4,6 +4,7 @@
 
 #include <common_types.h>
 #include <netinet/ip.h>
+#include <openssl/ssl.h>
 
 typedef __uint16_t Port;
 typedef struct sockaddr_in InternetSocketAddress;
@@ -17,17 +18,21 @@ typedef struct {
 	// Optional
 	Int backlog;
 	Bool local;
+	BoundedString cert_path;
 } ServerConfig;
 
 typedef struct {
 	FileDescriptor socket;
 	InternetSocketAddress address;
+	SSL_CTX* context;
 } InternetServer;
 
 static const ErrorCode ERROR_COULD_NOT_ESTABLISH = 1;
 static const ErrorCode ERROR_COULD_NOT_BIND = 2;
 static const ErrorCode ERROR_COULD_NOT_LISTEN = 3;
 static const ErrorCode ERROR_INVALID_OPTIONS = 4;
+
+static const ErrorCode ERROR_COULD_NOT_SET_UP = 5;
 
 static const ErrorCode ERROR_BAD_CONFIG_KEY = 1;
 static const ErrorCode ERROR_BAD_CONFIG_VALUE = 2;
@@ -60,4 +65,4 @@ Forks a new worker for the specified socket.
 In the parent process, writes back the child process pid to worker_pid.
 In the worker process, continues to serve the request(s) over socket.
 */
-ErrorCode spawn_worker(Socket socket, ServerConfig config, Pid* worker_pid);
+ErrorCode spawn_worker(SSL* ssl_connection, ServerConfig config, Pid* worker_pid);

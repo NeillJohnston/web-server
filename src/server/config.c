@@ -9,6 +9,7 @@ typedef __uint64_t Flags;
 static const Char* KEY_PORT = "port";
 static const Char* KEY_ROOT = "root";
 static const Char* KEY_DB_PATH = "db";
+static const Char* KEY_CERT_PATH = "cert";
 
 static const Char* KEY_BACKLOG = "back";
 static const Char* KEY_LOCAL = "local";
@@ -17,6 +18,7 @@ static const Char* KEY_LOCAL = "local";
 static const Flags FLAG_PORT = 1<<0;
 static const Flags FLAG_ROOT = 1<<1;
 static const Flags FLAG_DB_PATH = 1<<2;
+static const Flags FLAG_CERT_PATH = 1<<3;
 
 static const Char* VALUE_TRUE = "true";
 static const Char* VALUE_FALSE = "false";
@@ -71,6 +73,10 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 		else if (bounded_equ_cstr(key, KEY_DB_PATH)) {
 			if (copy_bounded_string(value, &config->db_path) != 0) return -1;
 			required = unset(required, FLAG_DB_PATH);
+		}
+		else if (bounded_equ_cstr(key, KEY_CERT_PATH)) {
+			if (copy_bounded_string(value, &config->cert_path) != 0) return -1;
+			required = unset(required, FLAG_CERT_PATH);
 		}
 		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
 			if (sscanf(value.data, "%d", &config->backlog) == 0) return ERROR_BAD_CONFIG_VALUE;

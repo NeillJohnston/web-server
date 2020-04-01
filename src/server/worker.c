@@ -24,11 +24,11 @@ static const HttpResponse DEFAULT_RESPONSE = {
 	}
 };
 
-static Void send_response(Socket socket, HttpResponse response) {
+static Void send_response(SSL* ssl_connection, HttpResponse response) {
 	BoundedString response_string;
 	// TODO: find out how to handle these two errors gracefully
 	if (make_http_response_string(response, &response_string)) _exit(-1);
-	if (send(socket, response_string.data, response_string.length, 0) == -1) _exit(-1);
+	if (SSL_write(ssl_connection, response_string.data, response_string.length) == -1) _exit(-1);
 
 	free_bounded_string(response_string);
 }
@@ -36,47 +36,50 @@ static Void send_response(Socket socket, HttpResponse response) {
 /*
 Perform the task of receiving requests and sending responses.
 */
-static Void be_worker(Socket socket, ServerConfig config) {
+static Void be_worker(SSL* ssl_connection, ServerConfig config) {
 	// TODO: use the headers given (Connection: keep-alive, etc.)
 
 	StreamedString streamed_request_string;
 	BoundedString request_string;
 	HttpRequest request;
 
-	if (read_streamed_string(socket, &streamed_request_string) != 0) {
-		send_response(socket, DEFAULT_RESPONSE);
+	if (read_ssl_streamed_string(ssl_connection, &streamed_request_string) != 0) {
+		send_response(ssl_connection, DEFAULT_RESPONSE);
 		_exit(-1);
 	}
 	if (bounded_from_streamed_string(&streamed_request_string, &request_string) != 0) {
-		send_response(socket, DEFAULT_RESPONSE);
+		send_response(ssl_connection, DEFAULT_RESPONSE);
 		_exit(-1);
 	}
 	if (parse_http_request(request_string, &request) != 0) {
-		send_response(socket, DEFAULT_RESPONSE);
+		send_response(ssl_connection, DEFAULT_RESPONSE);
 		_exit(-1);
 	}
 
 	printf("%s %.*s\n", METHOD_NAMES[request.method_code], (int) request.request_uri.uri.length, request.request_uri.uri.data);
 
 	HttpResponse response = respond(request, config);
-	send_response(socket, response);
+	send_response(ssl_connection, response);
+	
+	SSL_shutdown(ssl_connection);
 
 	free_streamed_string(&streamed_request_string);
 	free_bounded_string(request_string);
 	free_http_request(request);
 	free_http_response(response);
+	SSL_free(ssl_connection);
 
 	_exit(0);
 }
 
-ErrorCode spawn_worker(Socket socket, ServerConfig config, Pid* worker_pid) {
+ErrorCode spawn_worker(SSL* ssl_connection, ServerConfig config, Pid* worker_pid) {
 	const Pid INVALID = -1;
 
 	Pid forked = fork();
 	
 	if (forked == INVALID) return -1;
 	else if (forked == 0) {
-		be_worker(socket, config);
+		be_worker(ssl_connection, config);
 	}
 	else {
 		*worker_pid = forked;

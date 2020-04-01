@@ -1,7 +1,9 @@
 #include "server.h"
 
+#include <linux/limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -11,6 +13,7 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	// Validate config
 	if (config.backlog <= 0) return ERROR_INVALID_OPTIONS;
 
+	// Server socket initialization
 	server->address = (InternetSocketAddress) {
 		.sin_family = AF_INET,
 		.sin_port = htons(config.port),
@@ -25,6 +28,15 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	ErrorCode attempt_listen = listen(server->socket, config.backlog);
 	if (attempt_listen != 0) return ERROR_COULD_NOT_LISTEN;
 
+	// SSL context initialization
+	server->context = SSL_CTX_new(TLS_server_method());
+	if (server->context == NULL) return ERROR_COULD_NOT_SET_UP;
+
+	Char cert_path [PATH_MAX];
+	memcpy(cert_path, config.cert_path.data, config.cert_path.length);
+	cert_path[config.cert_path.length] = '\0';
+	if (SSL_CTX_use_certificate_file(server->context, cert_path, SSL_FILETYPE_PEM) != 0) return ERROR_COULD_NOT_SET_UP;
+
 	return 0;
 }
 
@@ -38,22 +50,17 @@ Void run_server(ServerConfig config, InternetServer server) {
 		Pid worker_pid;
 
 		Socket connection = accept(server.socket, &incoming, &incoming_length);
+
 		if (connection != -1) {
-			ErrorCode attempt_spawn_worker = -1;
-			while (attempt_spawn_worker != 0) {
-				attempt_spawn_worker = spawn_worker(connection, config, &worker_pid);
+			SSL* ssl_connection = SSL_new(server.context);
+			if (ssl_connection != NULL) {
+				ErrorCode attempt_spawn_worker = -1;
+				while (attempt_spawn_worker != 0) {
+					attempt_spawn_worker = spawn_worker(ssl_connection, config, &worker_pid);
+				}
+
+				close(connection);
 			}
-
-			// Print some information
-			// TODO: have a helper process that the server can talk to, and
-			// send information there instead
-			// if (incoming.sa_family == AF_INET) {
-			// 	Port port = ntohs(((InternetSocketAddress*) &incoming)->sin_port);
-			// 	ULong addr = ntohl(((InternetSocketAddress*) &incoming)->sin_addr.s_addr);
-			// 	printf("received connection from addr: %lx, port: %d\n", addr, port);
-			// }
-
-			close(connection);
 		}
 	}
 

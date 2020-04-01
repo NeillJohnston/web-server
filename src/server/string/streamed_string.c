@@ -37,6 +37,39 @@ ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
 	return 0;
 }
 
+// MARK: copy-pasted from above, needs refactor
+ErrorCode read_ssl_streamed_string(SSL* ssl_connection, StreamedString* string) {
+	const Size data_size = sizeof string->head.data;
+	StreamedStringNode* current = &string->head;
+
+	while (true) {
+		current->next = NULL;
+		SSize n_bytes = SSL_read(ssl_connection, current->data, data_size);
+
+		if (n_bytes == -1) {
+			free_streamed_string(string);
+			return -1;
+		}
+		else if (n_bytes < data_size) {
+			current->size = n_bytes;
+			break;
+		}
+		else {
+			StreamedStringNode* next = (StreamedStringNode*) malloc(sizeof(StreamedStringNode));
+			if (next == NULL) {
+				free_streamed_string(string);
+				return -1;
+			}
+			
+			current->next = next;
+			current->size = n_bytes;
+			current = next;
+		}
+	}
+	
+	return 0;
+}
+
 // TODO: Finish testing with Valgrind or something
 Void free_streamed_string(StreamedString* string) {
 	StreamedStringNode* current = (string->head).next;

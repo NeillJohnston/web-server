@@ -1,8 +1,9 @@
 #pragma once
 
 #include <common_types.h>
-#include <unistd.h>
 #include <limits.h>
+#include <openssl/ssl.h>
+#include <unistd.h>
 
 // Must be a multiple of 8 due to struct packing
 #define NODE_SIZE (0x1000)
@@ -51,6 +52,16 @@ If this function errors, then this function will free the memory that has been
 created so far before exiting - the caller does not have to.
 */
 ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string);
+
+/*
+Read in a string from an encrypted SSL stream, returning an error if necessary.
+Does not cap the size of the resulting string.
+Writes back to the given string.
+
+If this function errors, then this function will free the memory that has been
+created so far before exiting - the caller does not have to.
+*/
+ErrorCode read_ssl_streamed_string(SSL* ssl_connection, StreamedString* string);
 
 /*
 Free the memory allocated to a streamed string.

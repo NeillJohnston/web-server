@@ -6,11 +6,12 @@ SERVER_OBJECT = out/server
 SERVER_ROOT = src/server
 
 SQLITE_LINKS = -ldl -lpthread
+OPENSSL_LINKS = -lssl
 
 all: $(SERVER_OBJECT)
 
 $(SERVER_OBJECT): server_objects sqlite
-	gcc $(FLAGS) $(shell ls bin/*.o) -o $(SERVER_OBJECT) $(SQLITE_LINKS)
+	gcc $(FLAGS) $(shell ls bin/*.o) -o $(SERVER_OBJECT) $(SQLITE_LINKS) $(OPENSSL_LINKS)
 
 .PHONY: server_objects
 server_objects:
