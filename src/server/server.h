@@ -32,8 +32,7 @@ static const ErrorCode ERROR_COULD_NOT_ESTABLISH = 1;
 static const ErrorCode ERROR_COULD_NOT_BIND = 2;
 static const ErrorCode ERROR_COULD_NOT_LISTEN = 3;
 static const ErrorCode ERROR_INVALID_OPTIONS = 4;
-
-static const ErrorCode ERROR_COULD_NOT_SET_UP = 5;
+static const ErrorCode ERROR_SSL_CTX = 5;
 
 static const ErrorCode ERROR_BAD_CONFIG_KEY = 1;
 static const ErrorCode ERROR_BAD_CONFIG_VALUE = 2;
@@ -66,4 +65,4 @@ Forks a new worker for the specified socket.
 In the parent process, writes back the child process pid to worker_pid.
 In the worker process, continues to serve the request(s) over socket.
 */
-ErrorCode spawn_worker(SSL* ssl_connection, ServerConfig config, Pid* worker_pid);
+ErrorCode spawn_worker(SSL* ssl, ServerConfig config, Pid* worker_pid);

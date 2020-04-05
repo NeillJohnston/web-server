@@ -30,17 +30,19 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 
 	// SSL context initialization
 	server->context = SSL_CTX_new(TLS_server_method());
-	if (server->context == NULL) return ERROR_COULD_NOT_SET_UP;
+	if (server->context == NULL) return ERROR_SSL_CTX;
 
 	Char cert_path [PATH_MAX];
 	memcpy(cert_path, config.cert_path.data, config.cert_path.length);
 	cert_path[config.cert_path.length] = '\0';
-	if (SSL_CTX_use_certificate_file(server->context, cert_path, SSL_FILETYPE_PEM) != 0) return ERROR_COULD_NOT_SET_UP;
+	if (SSL_CTX_use_certificate_file(server->context, cert_path, SSL_FILETYPE_PEM) != 1) return ERROR_SSL_CTX;
 
 	Char pkey_path [PATH_MAX];
 	memcpy(pkey_path, config.pkey_path.data, config.pkey_path.length);
 	pkey_path[config.pkey_path.length] = '\0';
-	if (SSL_CTX_use_PrivateKey_file(server->context, pkey_path, SSL_FILETYPE_PEM) != 0) return ERROR_COULD_NOT_SET_UP;
+	if (SSL_CTX_use_PrivateKey_file(server->context, pkey_path, SSL_FILETYPE_PEM) != 1) return ERROR_SSL_CTX;
+
+	if (SSL_CTX_check_private_key(server->context) != 1) return ERROR_SSL_CTX;
 
 	return 0;
 }
@@ -52,24 +54,28 @@ Void run_server(ServerConfig config, InternetServer server) {
 	while (true) {
 		SocketAddress incoming;
 		SocketLength incoming_length = sizeof incoming;
-		Pid worker_pid;
 
 		Socket connection = accept(server.socket, &incoming, &incoming_length);
+		if (connection != 0) continue;
 
-		if (connection != -1) {
-			SSL* ssl_connection = SSL_new(server.context);
-			if (ssl_connection != NULL) {
-				ErrorCode attempt_spawn_worker = -1;
-				while (attempt_spawn_worker != 0) {
-					attempt_spawn_worker = spawn_worker(ssl_connection, config, &worker_pid);
-				}
+		SSL* ssl = SSL_new(server.context);
+		if (ssl == NULL) continue;
 
-				close(connection);
-			}
+		SSL_set_accept_state(ssl);
+		Int attempt_ssl_accept = SSL_accept(ssl);
+		if (attempt_ssl_accept != 1) {
+			Int ssl_error = SSL_get_error(ssl, attempt_ssl_accept);
+			printf("SSL error: %d\n", ssl_error);
+			shutdown(connection, 0);
 		}
-	}
 
-	// No clue how this will trigger, but including for safety
-	// (I guess?)
-	close(server.socket);
+		Pid worker_pid;
+		if (spawn_worker(ssl, config, &worker_pid) != 0) {
+			SSL_shutdown(ssl);
+			shutdown(connection, 0);
+			continue;
+		}
+
+		close(connection);
+	}
 }

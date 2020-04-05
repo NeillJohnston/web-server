@@ -61,7 +61,7 @@ Writes back to the given string.
 If this function errors, then this function will free the memory that has been
 created so far before exiting - the caller does not have to.
 */
-ErrorCode read_ssl_streamed_string(SSL* ssl_connection, StreamedString* string);
+ErrorCode read_ssl_streamed_string(SSL* ssl, StreamedString* string);
 
 /*
 Free the memory allocated to a streamed string.

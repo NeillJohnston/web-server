@@ -6,7 +6,7 @@ SERVER_OBJECT = out/server
 SERVER_ROOT = src/server
 
 SQLITE_LINKS = -ldl -lpthread
-OPENSSL_LINKS = -lssl
+OPENSSL_LINKS = -lssl -lcrypto
 
 all: $(SERVER_OBJECT)
 
@@ -40,7 +40,7 @@ VERBOSE = 2
 # Make sure UNIT= is declared when running make runtest
 .PHONY: runtest
 runtest:
-	gcc $(FLAGS) -g -I include -D_VERBOSE=$(VERBOSE) $(UNIT) $(BIN)/sqlite3.o $(SQLITE_LINKS) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
+	gcc $(FLAGS) -g -I include -D_VERBOSE=$(VERBOSE) $(UNIT) $(BIN)/$(SQLITE_OBJECT) $(SQLITE_LINKS) -o test/$(subst .,_,$(subst /,_,$(UNIT))).o
 	./test/$(subst .,_,$(subst /,_,$(UNIT))).o
 
 .PHONY: runalltests
@@ -49,5 +49,5 @@ runalltests: $(ALLTESTS)
 # Set _VERBOSE to 1 to declutter output
 .PHONY: $(ALLTESTS)
 $(ALLTESTS):
-	gcc $(FLAGS) -I include -D_VERBOSE=1 $@ -o test/$(subst .,_,$(subst /,_,$@)).o
+	gcc $(FLAGS) -I include -D_VERBOSE=1 $@ $(BIN)/$(SQLITE_OBJECT) $(SQLITE_LINKS) -o test/$(subst .,_,$(subst /,_,$@)).o
 	./test/$(subst .,_,$(subst /,_,$@)).o

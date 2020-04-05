@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <openssl/err.h>
 #include <stdio.h>
 
 static void log_error(Char* message) {
@@ -36,6 +37,7 @@ ErrorCode main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	SSL_library_init();
 	ErrorCode attempt_init_server = init_server(config, &server);
 	if (attempt_init_server == ERROR_COULD_NOT_BIND) {
 		log_error("Could not bind address");
@@ -51,6 +53,11 @@ ErrorCode main(int argc, char* argv[]) {
 	}
 	else if (attempt_init_server == ERROR_INVALID_OPTIONS) {
 		log_error("Bad config options (check your config file)");
+		return -1;
+	}
+	else if (attempt_init_server == ERROR_SSL_CTX) {
+		log_error("Error from SSL_CTX initialiation");
+		ERR_print_errors_fp(stdout);
 		return -1;
 	}
 	

@@ -38,13 +38,13 @@ ErrorCode read_streamed_string(FileDescriptor stream, StreamedString* string) {
 }
 
 // MARK: copy-pasted from above, needs refactor
-ErrorCode read_ssl_streamed_string(SSL* ssl_connection, StreamedString* string) {
+ErrorCode read_ssl_streamed_string(SSL* ssl, StreamedString* string) {
 	const Size data_size = sizeof string->head.data;
 	StreamedStringNode* current = &string->head;
 
 	while (true) {
 		current->next = NULL;
-		SSize n_bytes = SSL_read(ssl_connection, current->data, data_size);
+		SSize n_bytes = SSL_read(ssl, current->data, data_size);
 
 		if (n_bytes == -1) {
 			free_streamed_string(string);
