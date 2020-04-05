@@ -44,13 +44,13 @@ ErrorCode read_ssl_streamed_string(SSL* ssl, StreamedString* string) {
 
 	while (true) {
 		current->next = NULL;
-		SSize n_bytes = SSL_read(ssl, current->data, data_size);
-
-		if (n_bytes == -1) {
+		Size n_bytes;
+		if (SSL_read_ex(ssl, current->data, data_size, &n_bytes) != 1) {
 			free_streamed_string(string);
 			return -1;
 		}
-		else if (n_bytes < data_size) {
+
+		if (n_bytes < data_size) {
 			current->size = n_bytes;
 			break;
 		}

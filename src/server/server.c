@@ -35,7 +35,7 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	Char cert_path [PATH_MAX];
 	memcpy(cert_path, config.cert_path.data, config.cert_path.length);
 	cert_path[config.cert_path.length] = '\0';
-	if (SSL_CTX_use_certificate_file(server->context, cert_path, SSL_FILETYPE_PEM) != 1) return ERROR_SSL_CTX;
+	if (SSL_CTX_use_certificate_chain_file(server->context, cert_path) != 1) return ERROR_SSL_CTX;
 
 	Char pkey_path [PATH_MAX];
 	memcpy(pkey_path, config.pkey_path.data, config.pkey_path.length);
@@ -51,15 +51,18 @@ Void run_server(ServerConfig config, InternetServer server) {
 	typedef struct sockaddr SocketAddress;
 	typedef socklen_t SocketLength;
 
+	// TODO: lots of continuing in this loop, needs proper error logging
 	while (true) {
 		SocketAddress incoming;
 		SocketLength incoming_length = sizeof incoming;
 
 		Socket connection = accept(server.socket, &incoming, &incoming_length);
-		if (connection != 0) continue;
+		if (connection == -1) continue;
 
 		SSL* ssl = SSL_new(server.context);
 		if (ssl == NULL) continue;
+
+		if (SSL_set_fd(ssl, connection) != 1) continue;
 
 		SSL_set_accept_state(ssl);
 		Int attempt_ssl_accept = SSL_accept(ssl);
