@@ -20,6 +20,7 @@ UNIT(parse_config) {
 		COMPARE(config.db_path, equ, "out/test.db");
 		COMPARE(config.cert_path, equ, "private/cert.pem");
 		COMPARE(config.pkey_path, equ, "private/pkey.pem");
+		COMPARE(config.domain, equ, "example.com");
 		
 		ASSERT(config.port == 3000);
 		ASSERT(config.backlog == 10);
@@ -36,6 +37,7 @@ UNIT(parse_config) {
 		COMPARE(config.db_path, equ, "out/test.db");
 		COMPARE(config.cert_path, equ, "private/cert.pem");
 		COMPARE(config.pkey_path, equ, "private/pkey.pem");
+		COMPARE(config.domain, equ, "example.com");
 
 		DONE;
 	}
@@ -58,6 +60,6 @@ DRIVER {
 }
 
 // Blank stubs
-Int SSL_read(SSL* ssl, Void* buffer, Int size) {
+Int SSL_read_ex(SSL* ssl, Void* buf, Size num, Size *read_bytes) {
 	return 0;
 }

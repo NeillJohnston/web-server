@@ -15,15 +15,16 @@ typedef struct {
 	Port port;
 	BoundedString root;
 	BoundedString db_path;
+	BoundedString cert_path;
+	BoundedString pkey_path;
+	BoundedString domain;
 	// Optional
 	Int backlog;
 	Bool local;
-	BoundedString cert_path;
-	BoundedString pkey_path;
 } ServerConfig;
 
 typedef struct {
-	FileDescriptor socket;
+	Socket socket;
 	InternetSocketAddress address;
 	SSL_CTX* context;
 } InternetServer;
@@ -49,6 +50,14 @@ Initialize the server.
 Writes details back to the provided InternetServer.
 */
 ErrorCode init_server(ServerConfig config, InternetServer* server);
+
+/*
+Run the redirect server.
+The sole purpose here is to redirect connections to the main (HTTPS) server.
+
+Runs in a new process and returns the child pid.
+*/
+Pid run_redirect_server(ServerConfig config, InternetServer server, Pid* redirect_pid);
 
 /*
 Run the server.

@@ -37,6 +37,6 @@ DRIVER {
 }
 
 // Blank stubs
-Int SSL_read(SSL* ssl, Void* buffer, Int size) {
+Int SSL_read_ex(SSL* ssl, Void* buf, Size num, Size *read_bytes) {
 	return 0;
 }

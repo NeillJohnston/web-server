@@ -1,4 +1,5 @@
 #include "server.h"
+#include "http/http.h"
 
 #include <linux/limits.h>
 #include <stdbool.h>
@@ -45,6 +46,57 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 	if (SSL_CTX_check_private_key(server->context) != 1) return ERROR_SSL_CTX;
 
 	return 0;
+}
+
+ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* redirect_pid) {
+	Pid child = fork();
+	if (child == -1) return -1;
+	else if (child != 0) {
+		*redirect_pid = child;
+		return 0;
+	}
+
+	while (true) {
+		typedef struct sockaddr SocketAddress;
+		typedef socklen_t SocketLength;
+
+		SocketAddress incoming;
+		SocketLength incoming_length = sizeof incoming;
+
+		Socket connection = accept(server.socket, &incoming, &incoming_length);
+		if (connection == -1) continue;
+
+		// Properly parses the HTTP request just to get the request URI
+		StreamedString streamed_request_string;
+		if (read_streamed_string(connection, &streamed_request_string) != 0) {
+			shutdown(connection, SHUT_RDWR);
+			continue;
+		}
+
+		BoundedString request_string;
+		if (bounded_from_streamed_string(&streamed_request_string, &request_string) != 0) {
+			shutdown(connection, SHUT_RDWR);
+			continue;
+		}
+		
+		HttpRequest request;
+		if (parse_http_request(request_string, &request) != 0) {
+			shutdown(connection, SHUT_RDWR);
+			continue;
+		}
+
+		Char message [1024];
+		BoundedString uri = request.request_uri.uri;
+		Size message_length = (Size) sprintf(
+			message,
+			"HTTP/1.1 301 Moved Permanently\r\nLocation: https://%.*s/%.*s\r\n\r\n",
+			(Int) config.domain.length, config.domain.data,
+			(Int) uri.length, uri.data
+		);
+		write(connection, message, message_length);
+
+		shutdown(connection, SHUT_RDWR);
+	}
 }
 
 Void run_server(ServerConfig config, InternetServer server) {
