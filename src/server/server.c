@@ -2,6 +2,7 @@
 #include "http/http.h"
 
 #include <linux/limits.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -105,6 +106,9 @@ ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* r
 Void run_server(ServerConfig config, InternetServer server) {
 	typedef struct sockaddr SocketAddress;
 	typedef socklen_t SocketLength;
+
+	// Stops zombie processes
+	signal(SIGCHLD, SIG_IGN);
 
 	// TODO: lots of continuing in this loop, needs proper error logging
 	while (true) {
