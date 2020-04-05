@@ -45,6 +45,8 @@ ErrorCode init_server(ServerConfig config, InternetServer* server) {
 
 	if (SSL_CTX_check_private_key(server->context) != 1) return ERROR_SSL_CTX;
 
+	SSL_CTX_set_mode(server->context, SSL_MODE_AUTO_RETRY);
+
 	return 0;
 }
 
@@ -66,7 +68,7 @@ ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* r
 		Socket connection = accept(server.socket, &incoming, &incoming_length);
 		if (connection == -1) continue;
 
-		// Properly parses the HTTP request just to get the request URI
+		// Get the request URI
 		StreamedString streamed_request_string;
 		if (read_streamed_string(connection, &streamed_request_string) != 0) {
 			shutdown(connection, SHUT_RDWR);
@@ -87,9 +89,10 @@ ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* r
 
 		Char message [1024];
 		BoundedString uri = request.request_uri.uri;
+		printf("redirecting to HTTPS, URI %.*s\n", (Int) uri.length, uri.data);
 		Size message_length = (Size) sprintf(
 			message,
-			"HTTP/1.1 301 Moved Permanently\r\nLocation: https://%.*s/%.*s\r\n\r\n",
+			"HTTP/1.1 301 Moved Permanently\r\nLocation: https://%.*s%.*s\r\n\r\n",
 			(Int) config.domain.length, config.domain.data,
 			(Int) uri.length, uri.data
 		);
