@@ -415,3 +415,8 @@ DRIVER {
 	TEST(copy_bounded_string);
 	TEST(free_bounded_string);
 }
+
+// Blank stubs
+Int SSL_read(SSL* ssl, Void* buffer, Int num) {
+	return 0;
+}

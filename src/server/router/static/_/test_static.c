@@ -61,3 +61,8 @@ UNIT(route_static) {
 DRIVER {
 	TEST(route_static);
 }
+
+// Blank stubs
+Int SSL_read(SSL* ssl, Void* buffer, Int num) {
+	return 0;
+}

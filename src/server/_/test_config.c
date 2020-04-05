@@ -16,10 +16,12 @@ UNIT(parse_config) {
 
 		OKAY(parse_config("src/server/_/maximum.cfg", &config));
 		
-		ASSERT(config.port == 3000);
 		COMPARE(config.root, equ, "out/public/");
 		COMPARE(config.db_path, equ, "out/test.db");
+		COMPARE(config.cert_path, equ, "private/cert.pem");
+		COMPARE(config.pkey_path, equ, "private/pkey.pem");
 		
+		ASSERT(config.port == 3000);
 		ASSERT(config.backlog == 10);
 		ASSERT(config.local == true);
 
@@ -30,9 +32,10 @@ UNIT(parse_config) {
 
 		OKAY(parse_config("src/server/_/minimum.cfg", &config));
 
-		ASSERT(config.port == 3001);
 		COMPARE(config.root, equ, "out/public/");
 		COMPARE(config.db_path, equ, "out/test.db");
+		COMPARE(config.cert_path, equ, "private/cert.pem");
+		COMPARE(config.pkey_path, equ, "private/pkey.pem");
 
 		DONE;
 	}
@@ -52,4 +55,9 @@ UNIT(parse_config) {
 
 DRIVER {
 	TEST(parse_config);
+}
+
+// Blank stubs
+Int SSL_read(SSL* ssl, Void* buffer, Int size) {
+	return 0;
 }

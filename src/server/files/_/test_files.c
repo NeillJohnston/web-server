@@ -35,3 +35,8 @@ UNIT(get_file_contents) {
 DRIVER {
 	TEST(get_file_contents);
 }
+
+// Blank stubs
+Int SSL_read(SSL* ssl, Void* buffer, Int size) {
+	return 0;
+}

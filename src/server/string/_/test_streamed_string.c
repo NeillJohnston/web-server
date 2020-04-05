@@ -121,3 +121,8 @@ DRIVER {
 	TEST(read_streamed_string);
 	TEST(free_streamed_string);
 }
+
+// Blank stubs
+Int SSL_read(SSL* ssl, Void* buffer, Int num) {
+	return 0;
+}
