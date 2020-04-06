@@ -8,7 +8,7 @@ static void log_error(Char* message) {
 	printf("\e[31mError: \e[39m%s\n", message);
 }
 
-ErrorCode main(int argc, char* argv[]) {
+ErrorCode main(Int argc, Char* argv[]) {
 	InternetServer server, redirect_server;
 	ServerConfig config, redirect_config;
 
@@ -39,7 +39,6 @@ ErrorCode main(int argc, char* argv[]) {
 	redirect_config = config;
 	redirect_config.port = 80;
 
-	SSL_library_init();
 	ErrorCode attempt_init_server = init_server(config, &server);
 	if (attempt_init_server == ERROR_COULD_NOT_BIND) {
 		log_error("Could not bind address");
@@ -63,35 +62,42 @@ ErrorCode main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	ErrorCode attempt_init_redirect_server = init_server(redirect_config, &redirect_server);
-	if (attempt_init_redirect_server == ERROR_COULD_NOT_BIND) {
-		log_error("Could not bind address for redirects");
-		return -1;
+	// Don't need to run the redirect server if we're in dev mode
+	if (!config.dev) {
+		ErrorCode attempt_init_redirect_server = init_server(redirect_config, &redirect_server);
+		if (attempt_init_redirect_server == ERROR_COULD_NOT_BIND) {
+			log_error("Could not bind address for redirects");
+			return -1;
+		}
+		else if (attempt_init_redirect_server == ERROR_COULD_NOT_ESTABLISH) {
+			log_error("Could not establish socket for redirects");
+			return -1;
+		}
+		else if (attempt_init_redirect_server == ERROR_COULD_NOT_LISTEN) {
+			log_error("Could not listen on port for redirects");
+			return -1;
+		}
+		else if (attempt_init_redirect_server == ERROR_INVALID_OPTIONS) {
+			log_error("Bad config options (check your config file) for redirects");
+			return -1;
+		}
+		else if (attempt_init_redirect_server == ERROR_SSL_CTX) {
+			log_error("Error from SSL_CTX initialiation for redirects");
+			ERR_print_errors_fp(stdout);
+			return -1;
+		}
+		
+		Pid redirect_pid;
+		if (run_redirect_server(redirect_config, redirect_server, &redirect_pid) != 0) {
+			log_error("Could not run redirect server");
+			return -1;
+		}
 	}
-	else if (attempt_init_redirect_server == ERROR_COULD_NOT_ESTABLISH) {
-		log_error("Could not establish socket for redirects");
-		return -1;
-	}
-	else if (attempt_init_redirect_server == ERROR_COULD_NOT_LISTEN) {
-		log_error("Could not listen on port for redirects");
-		return -1;
-	}
-	else if (attempt_init_redirect_server == ERROR_INVALID_OPTIONS) {
-		log_error("Bad config options (check your config file) for redirects");
-		return -1;
-	}
-	else if (attempt_init_redirect_server == ERROR_SSL_CTX) {
-		log_error("Error from SSL_CTX initialiation for redirects");
-		ERR_print_errors_fp(stdout);
-		return -1;
-	}
-	
-	Pid redirect_pid;
-	if (run_redirect_server(redirect_config, redirect_server, &redirect_pid) != 0) {
-		log_error("Could not run redirect server");
-		return -1;
-	}
-	run_server(config, server);
+
+	if (!config.dev)
+		run_server(config, server);
+	else
+		run_dev_server(config, server);
 
 	return 0;
 }

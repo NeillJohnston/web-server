@@ -24,7 +24,7 @@ UNIT(parse_config) {
 		
 		ASSERT(config.port == 3000);
 		ASSERT(config.backlog == 10);
-		ASSERT(config.local == true);
+		ASSERT(config.dev == true);
 
 		DONE;
 	}

@@ -14,7 +14,7 @@ static const Char* KEY_DOMAIN = "domain";
 
 static const Char* KEY_PORT = "port";
 static const Char* KEY_BACKLOG = "back";
-static const Char* KEY_LOCAL = "local";
+static const Char* KEY_DEV = "dev";
 
 // Flags for all of the necessary variables
 static const Flags FLAG_ROOT = 1<<0;
@@ -52,10 +52,11 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 
 	// Initialize optionals with defaults
 	config->port = 443;
-	config->backlog = 10;
-	config->local = true;
+	config->backlog = 128;
+	config->dev = true;
 
 	Flags required = FLAG_ROOT | FLAG_DB_PATH | FLAG_CERT_PATH | FLAG_PKEY_PATH | FLAG_DOMAIN;
+	Flags dev_unrequired = FLAG_CERT_PATH | FLAG_PKEY_PATH | FLAG_DOMAIN;
 
 	while (mut_config_string.length > 0) {
 		BoundedString pair = pop_line_inplace(&mut_config_string);
@@ -92,12 +93,13 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
 			if (sscanf(value.data, "%d", &config->backlog) == 0) return ERROR_BAD_CONFIG_VALUE;
 		}
-		else if (bounded_equ_cstr(key, KEY_LOCAL)) {
+		else if (bounded_equ_cstr(key, KEY_DEV)) {
 			if (bounded_equ_cstr(value, VALUE_TRUE)) {
-				config->local = true;
+				config->dev = true;
+				required = unset(required, dev_unrequired);
 			}
 			else if (bounded_equ_cstr(value, VALUE_FALSE)) {
-				config->local = false;
+				config->dev = false;
 			}
 			else {
 				return ERROR_BAD_CONFIG_VALUE;

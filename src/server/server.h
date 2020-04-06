@@ -12,15 +12,15 @@ typedef FileDescriptor Socket;
 
 typedef struct {
 	// Necessary
-	Port port;
 	BoundedString root;
 	BoundedString db_path;
 	BoundedString cert_path;
 	BoundedString pkey_path;
 	BoundedString domain;
 	// Optional
+	Port port;
 	Int backlog;
-	Bool local;
+	Bool dev;
 } ServerConfig;
 
 typedef struct {
@@ -63,15 +63,25 @@ Pid run_redirect_server(ServerConfig config, InternetServer server, Pid* redirec
 Run the server.
 Loops forever, accepting connections and spawning workers to fulfill requests.
 Interesting info may be printed to the console.
-
-TODO: have a helper process that the server can talk to, and send information
-there instead
 */
 Void run_server(ServerConfig config, InternetServer server);
 
 /*
-Forks a new worker for the specified socket.
+Run the dev server (if config.dev is true).
+Just as run_server, loops forever and spawns workers to fulfill requests.
+The only difference is that the dev server runs without HTTPS.
+*/
+Void run_dev_server(ServerConfig config, InternetServer server);
+
+/*
+Forks a new worker for the specified SSL connection.
 In the parent process, writes back the child process pid to worker_pid.
 In the worker process, continues to serve the request(s) over socket.
 */
 ErrorCode spawn_worker(SSL* ssl, ServerConfig config, Pid* worker_pid);
+
+/*
+Forks a new worker for the specified socket (intended for the dev server).
+Just as spawn_worker, writes back the child process pid to worker_pid.
+*/
+ErrorCode spawn_dev_worker(Socket connection, ServerConfig config, Pid* worker_pid);
