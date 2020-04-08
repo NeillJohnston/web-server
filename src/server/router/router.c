@@ -182,7 +182,7 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 	// MARK: For refactor, separate and test this logic
 
 	// Content type header
-	char* content_type_data = "text/html";
+	Char* content_type_data = "text/html";
 	if (has_extension(uri, "html")) content_type_data = "text/html";
 	else if (has_extension(uri, "css")) content_type_data = "text/css";
 	else if (has_extension(uri, "js")) content_type_data = "text/js";

@@ -42,7 +42,7 @@ Send a response over a socket.
 static Void send_dev_response(Socket connection, HttpResponse response) {
 	BoundedString response_string;
 	// TODO: find out how to handle these two errors gracefully
-	if (make_http_response_string(response, &response_string)) _exit(-1);
+	if (make_http_response_string(response, &response_string) != 0) _exit(-1);
 	if (write(connection, response_string.data, response_string.length) == -1) _exit(-1);
 
 	free_bounded_string(response_string);
