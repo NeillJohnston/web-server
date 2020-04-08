@@ -1,6 +1,7 @@
 #include "files.h"
 #include "../string/streamed_string.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <linux/limits.h>
 #include <stdlib.h>
@@ -14,7 +15,10 @@ ErrorCode get_file_contents(BoundedString path, BoundedString* contents) {
 	terminated_path[path.length] = '\0';
 
 	FileDescriptor file = open(terminated_path, O_RDONLY);
-	if (file == -1) return -1;
+	if (file == -1) {
+		if (errno == ENOENT || errno == EISDIR) return ERROR_NO_FILE;
+		else return -1;
+	}
 
 	StreamedString streamed_contents;
 	if (read_streamed_string(file, &streamed_contents) != 0) return -1;

@@ -26,7 +26,7 @@ UNIT(get_file_contents) {
 		BoundedString path = make_bounded_string("src/server/files/_/missing.txt");
 		BoundedString contents;
 
-		ERROR(get_file_contents(path, &contents));
+		ASSERT(get_file_contents(path, &contents) == ERROR_NO_FILE);
 
 		DONE;
 	}

@@ -19,12 +19,9 @@ UInt route_static(BoundedString root, BoundedString path, HttpResponse* response
 	append_inplace(root, &full_path);
 	append_inplace(path, &full_path);
 
-	if (get_file_contents(full_path, &response->content) != 0) {
-		// Need to check EISDIR because this subrouter handles everything not
-		// found in the router table, including (potential) folders
-		if (errno == ENOENT || errno == EISDIR) return 404;
-		else return 500;
-	}
+	ErrorCode attempt_get_contents = get_file_contents(full_path, &response->content);
+	if (attempt_get_contents == ERROR_NO_FILE) return 404;
+	else if (attempt_get_contents != 0) return 500;
 
 	return 200;
 }
