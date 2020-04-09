@@ -2,5 +2,6 @@
 bin
 out
 test
+docs
 src/sqlite
 *.swp

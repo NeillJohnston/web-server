@@ -43,6 +43,8 @@ UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedStrin
 
 	response->content = get_json(stmt);
 
+	// TODO: needs application/json MIME type
+
 	free_bounded_string(query);
 	free(query_cstr);
 
