@@ -51,7 +51,7 @@ Since realloc is being called, this may error.
 */
 static ErrorCode vector_append(Char* suffix, BoundedString* string, Size* capacity) {
 	Size suffix_length = strlen(suffix);
-	if (string->length + suffix_length > *capacity) {
+	while (string->length + suffix_length > *capacity) {
 		*capacity = (*capacity) * 2;
 		string->data = realloc(string->data, *capacity);
 		if (string->data == NULL) return -1;

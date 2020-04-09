@@ -1,4 +1,4 @@
-OBJECTS = dynamic.o
+OBJECTS = dynamic.o json.o
 
 all: $(OBJECTS) $(SUB)
 

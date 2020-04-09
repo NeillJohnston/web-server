@@ -11,6 +11,7 @@ ErrorCode get_file_contents(BoundedString path, BoundedString* contents) {
 	if (path.length > PATH_MAX-1) return -1;
 
 	Char terminated_path [PATH_MAX];
+	if (path.length+1 > PATH_MAX) return -1;
 	memcpy(terminated_path, path.data, path.length);
 	terminated_path[path.length] = '\0';
 

@@ -64,7 +64,7 @@ static HttpResponse make_500() {
 
 /*
 Write a bounded string to a C-string.
-Assumes the C-string has an adequate buffer size.
+Assumes the C-string has an adequate buffer size to hold both the string and the null-terminator.
 */
 static Void write_bounded_to_cstr(BoundedString string, Char* cstr) {
 	memcpy(cstr, string.data, string.length);
@@ -102,7 +102,7 @@ static Void route(BoundedString path, Int type, ServerConfig config, HttpRespons
 		response->status_code = route_static(config.root, path, response);
 	}
 	else if (type == ROUTE_DYNAMIC) {
-		response->status_code = route_dynamic(config.root, path, response);
+		response->status_code = route_dynamic(config.root, config.db_path, path, response);
 	}
 }
 
