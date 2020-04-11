@@ -101,8 +101,9 @@ Void append_inplace(BoundedString suffix, BoundedString* string) {
 }
 
 Void append_cstr_inplace(const Char* suffix, BoundedString* string) {
-	strcpy(string->data + string->length, suffix);
-	string->length += strlen(suffix);
+	Size length = strlen(suffix);
+	memcpy(string->data + string->length, suffix, length);
+	string->length += length;
 }
 
 Void trim_inplace(BoundedString* string) {

@@ -26,5 +26,7 @@ ErrorCode get_file_contents(BoundedString path, BoundedString* contents) {
 
 	if (bounded_from_streamed_string(&streamed_contents, contents) != 0) return -1;
 
+	free_streamed_string(&streamed_contents);
+
 	return 0;
 }

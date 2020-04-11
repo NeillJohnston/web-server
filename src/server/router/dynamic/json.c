@@ -26,7 +26,7 @@ static Char* concatenate(Size n, ...) {
 	va_start(args1, n);
 	va_start(args2, n);
 
-	Size length = 0;
+	Size length = 1;
 	for (Size i = 0; i < n; ++i) length += strlen(va_arg(args1, Char*));
 
 	Char* string = malloc(length);
@@ -51,8 +51,10 @@ Since realloc is being called, this may error.
 */
 static ErrorCode vector_append(Char* suffix, BoundedString* string, Size* capacity) {
 	Size suffix_length = strlen(suffix);
-	while (string->length + suffix_length > *capacity) {
-		*capacity = (*capacity) * 2;
+	if (string->length + suffix_length > *capacity) {
+		while (string->length + suffix_length > *capacity) {
+			*capacity = (*capacity) * 2;
+		}
 		string->data = realloc(string->data, *capacity);
 		if (string->data == NULL) return -1;
 	}
@@ -93,6 +95,7 @@ BoundedString get_json(sqlite3_stmt* query) {
 				if (row == NULL) return no_data();
 
 				if (vector_append(row, &json, &capacity) != 0) return no_data();
+				free(row);
 			}
 			else if (type == SQLITE_TEXT) {
 				const Char* value = (Char*) sqlite3_column_text(query, i);
@@ -101,6 +104,7 @@ BoundedString get_json(sqlite3_stmt* query) {
 				if (row == NULL) return no_data();
 
 				if (vector_append(row, &json, &capacity) != 0) return no_data();
+				free(row);
 			}
 			else {
 				// Unsupported type

@@ -19,14 +19,14 @@ SQL query to find a route with a given method/route in the database.
 MAGIC, but it's genuinely an okay way to do things this time.
 */
 static const Char* FIND_ROUTE =
-"select * from ROUTES where METHOD = ? and ROUTE = ?;";
+"select * from routes where method = ? and route = ?;";
 
 /*
 SQL query to find an error route.
 MAGIC, but it's genuinely an okay way to do things this time.
 */
 static const Char* FIND_ERROR_ROUTE =
-"select * from ROUTES where METHOD = \"ERROR\" and ROUTE = ?;";
+"select * from routes where method = \"ERROR\" and route = ?;";
 
 /*
 Default blank response, importantly has all pointers NULL so that free

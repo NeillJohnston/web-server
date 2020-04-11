@@ -45,6 +45,9 @@ UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedStrin
 
 	// TODO: needs application/json MIME type
 
+	sqlite3_finalize(stmt);
+	sqlite3_close(database);
+
 	free_bounded_string(query);
 	free(query_cstr);
 
