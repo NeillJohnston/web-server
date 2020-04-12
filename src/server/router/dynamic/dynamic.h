@@ -14,4 +14,4 @@ BoundedString get_json(sqlite3_stmt* query);
 /*
 Stub for now. Returns 404 unconditionally.
 */
-UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedString path, HttpResponse* response);
+UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedString path, BoundedString params, HttpResponse* response);

@@ -14,7 +14,7 @@ static Void write_bounded_to_cstr(BoundedString string, Char* cstr) {
 	cstr[string.length] = '\0';
 }
 
-UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedString path, HttpResponse* response) {
+UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedString path, BoundedString params, HttpResponse* response) {
 	sqlite3* database;
 	Char database_path_cstr [PATH_MAX];
 	if (database_path.length+1 > PATH_MAX) return 500;
@@ -40,6 +40,20 @@ UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedStrin
 
 	sqlite3_stmt* stmt;
 	if (sqlite3_prepare_v2(database, query_cstr, -1, &stmt, NULL)) return 500;
+
+	// Bind URL query params
+	// MARK: shoddy support for "typical" params because I don't intend to use
+	// this for anything like HTML forms
+	for (Int i = 1; i <= sqlite3_bind_parameter_count(stmt); ++i) {
+		BoundedString param = pop_delimited_inplace(&params, ',');
+		
+		Char* param_cstr = malloc(param.length + 1);
+		// MARK: for refactor, definitely need some bounded/c-string conversion functions lol
+		if (param_cstr == NULL) return 500;
+		write_bounded_to_cstr(param, param_cstr);
+
+		if (sqlite3_bind_text(stmt, i, param_cstr, -1, free) != SQLITE_OK) return 500;
+	}
 
 	response->content = get_json(stmt);
 

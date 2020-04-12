@@ -97,12 +97,12 @@ static Void read_routes_row(sqlite3_stmt* statement, BoundedString* path, Int* t
 Route to a requested path, writing back to response.
 Proxy for all the sub-routers.
 */
-static Void route(BoundedString path, Int type, ServerConfig config, HttpResponse* response) {
+static Void route(BoundedString path, BoundedString params, Int type, ServerConfig config, HttpResponse* response) {
 	if (type == ROUTE_STATIC) {
 		response->status_code = route_static(config.root, path, response);
 	}
 	else if (type == ROUTE_DYNAMIC) {
-		response->status_code = route_dynamic(config.root, config.db_path, path, response);
+		response->status_code = route_dynamic(config.root, config.db_path, path, params, response);
 	}
 }
 
@@ -129,12 +129,13 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 	sqlite3* database;
 
 	const Char* method = METHOD_NAMES[request.method_code];
-	BoundedString uri = request.request_uri.uri;
+	BoundedString params = request.request_uri.uri;
+	BoundedString uri = pop_delimited_inplace(&params, '?');
 
 	write_bounded_to_cstr(config.db_path, buffer);
 	if (sqlite3_open(buffer, &database) != 0) return make_500();
 
-	write_bounded_to_cstr(request.request_uri.uri, buffer);
+	write_bounded_to_cstr(uri, buffer);
 	sqlite3_stmt* find_route;
 	if (sqlite3_prepare_v2(database, FIND_ROUTE, -1, &find_route, NULL) != 0) return make_500();
 	if (sqlite3_bind_text(find_route, 1, method, -1, SQLITE_STATIC) != 0) return make_500();
@@ -147,12 +148,12 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 		
 		read_routes_row(find_route, &path, &type);
 		sqlite3_finalize(find_route);
-		route(path, type, config, &response);
+		route(path, params, type, config, &response);
 	}
 	// No route found, try static routing to the request URI
 	else {
 		sqlite3_finalize(find_route);
-		route(uri, ROUTE_STATIC, config, &response);
+		route(uri, params, ROUTE_STATIC, config, &response);
 	}
 
 	// Try re-routing for errors
@@ -172,7 +173,7 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 			sqlite3_finalize(find_error_route);
 
 			UInt status_code = response.status_code;
-			route(path, type, config, &response);
+			route(path, params, type, config, &response);
 			response.status_code = status_code;
 		}
 	}
