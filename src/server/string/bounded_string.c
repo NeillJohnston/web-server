@@ -95,6 +95,25 @@ BoundedString pop_token_inplace(BoundedString* string) {
 	return token;
 }
 
+BoundedString pop_delimited_inplace(BoundedString* string, Char delimiter) {
+	BoundedString token = {
+		.data = string->data,
+		.length = string->length
+	};
+
+	for (Size i = 0; i < string->length; ++i) {
+		if (string->data[i] == delimiter) {
+			token.length = i;
+			string->data += i+1;
+			string->length -= i+1;
+			return token;
+		}
+	}
+
+	string->length = 0;
+	return token;
+}
+
 Void append_inplace(BoundedString suffix, BoundedString* string) {
 	memcpy(string->data + string->length, suffix.data, suffix.length);
 	string->length += suffix.length;

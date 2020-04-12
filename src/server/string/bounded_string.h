@@ -52,6 +52,17 @@ When the last token is popped, the original string will have a length of 0.
 BoundedString pop_token_inplace(BoundedString* string);
 
 /*
+"Pop" a delimited token (characters up to the first instance of delimiter)
+from a bounded string, by modifying the length of string to not include the
+popped token or the instance of delimiter.
+
+Similar to the other pop- functions.
+
+When the last delimited token is popped, string will have a length of 0.
+*/
+BoundedString pop_delimited_inplace(BoundedString* string, Char delimiter);
+
+/*
 Append suffix to string, inplace (without making a new bounded string).
 Caller must do necssary memory management and ensure that the data buffer of
 string is large enough to hold the suffix.

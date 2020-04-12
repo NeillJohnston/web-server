@@ -258,6 +258,48 @@ UNIT(pop_token_inplace) {
 	}
 }
 
+UNIT(pop_delimited_inplace) {
+	SPEC("pops a delimited token") {
+		BoundedString string = make_bounded_string("ab,cd");
+		BoundedString token = pop_delimited_inplace(&string, ',');
+
+		COMPARE(string, equ, "cd");
+		COMPARE(token, equ, "ab");
+
+		DONE;
+	}
+	SPEC("pops multiple delimited tokens in succession") {
+		BoundedString string = make_bounded_string("a,b,c,d");
+
+		pop_delimited_inplace(&string, ',');
+		ASSERT(string.length == 5);
+		pop_delimited_inplace(&string, ',');
+		ASSERT(string.length == 3);
+		pop_delimited_inplace(&string, ',');
+		ASSERT(string.length == 1);
+
+		DONE;
+	}
+	SPEC("can return 0-length tokens") {
+		BoundedString string = make_bounded_string("|abc");
+		BoundedString token = pop_delimited_inplace(&string, '|');
+
+		COMPARE(token, equ, "");
+		COMPARE(string, equ, "abc");
+
+		DONE;
+	}
+	SPEC("pops the last token") {
+		BoundedString string = make_bounded_string("abc");
+		BoundedString token = pop_delimited_inplace(&string, '?');
+
+		ASSERT(string.length == 0);
+		COMPARE(token, equ, "abc");
+
+		DONE;
+	}
+}
+
 UNIT(append_inplace) {
 	SPEC("appends two strings") {
 		Char buffer [] = "hello.....";
@@ -409,6 +451,7 @@ DRIVER {
 	TEST(bounded_string_equ);
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
+	TEST(pop_delimited_inplace);
 	TEST(append_inplace);
 	TEST(append_cstr_inplace);
 	TEST(trim_inplace);
