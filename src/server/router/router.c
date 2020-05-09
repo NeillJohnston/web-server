@@ -82,8 +82,7 @@ static Int first_row(sqlite3_stmt* statement) {
 }
 
 /*
-Read the important (result) columns from a row in the routes table.
-Assumes that the return code of sqlite3_step has been checked befre calling.
+Read the data (path/type) columns from a row in the routes table.
 */
 static Void read_routes_row(sqlite3_stmt* statement, BoundedString* path, Int* type) {
 	const unsigned char* path_data = sqlite3_column_text(statement, 2);

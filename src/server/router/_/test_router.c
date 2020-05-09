@@ -33,6 +33,7 @@ const Flags FLAG_STATIC = 1<<1;
 const Flags FLAG_DYNAMIC = 1<<2;
 Flags routed_where;
 
+// Stub for route_static (defined elsewhere)
 UInt route_static(BoundedString root, BoundedString path, HttpResponse* response) {
 	routed_where |= FLAG_STATIC;
 	// Triggered by the error reroute testcase
@@ -40,7 +41,8 @@ UInt route_static(BoundedString root, BoundedString path, HttpResponse* response
 	return 200;
 }
 
-UInt route_dynamic(BoundedString root, BoundedString path, HttpResponse* response) {
+// Stub for route_dynamic (defined elsewhere)
+UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedString path, BoundedString params, HttpResponse* response) {
 	routed_where |= FLAG_DYNAMIC;
 	// Should be triggered by the error reroute testcase
 	if (path.data[0] == '*') {
