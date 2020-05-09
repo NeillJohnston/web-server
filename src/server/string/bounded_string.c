@@ -34,6 +34,11 @@ Bool bounded_string_equ(BoundedString x, BoundedString y) {
 	return memcmp(x.data, y.data, x.length) == 0;
 }
 
+Bool bounded_string_equ_cstr(BoundedString x, const Char* y) {
+	if (x.length != strlen(y)) return false;
+	return memcmp(x.data, y, x.length) == 0;
+}
+
 BoundedString pop_line_inplace(BoundedString* string) {
 	BoundedString line = {
 		.data = string->data

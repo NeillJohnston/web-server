@@ -120,6 +120,28 @@ UNIT(bounded_string_equ) {
 	}
 }
 
+UNIT(bounded_string_equ_cstr) {
+	SPEC("compares strings properly") {
+		Char* cstr1 = "hello";
+		BoundedString bounded1 = make_bounded_string(cstr1);
+		ASSERT(bounded_string_equ_cstr(bounded1, cstr1));
+
+		Char* cstr2 = "test\n";
+		BoundedString bounded2 = {
+			.data = "test\ngarbage",
+			.length = 5
+		};
+		ASSERT(bounded_string_equ_cstr(bounded2, cstr2));
+
+		// Fail case
+		Char* cstr3 = "failure";
+		BoundedString bounded3 = make_bounded_string("fail");
+		ASSERT(bounded_string_equ_cstr(bounded3, cstr3) == false);
+
+		DONE;
+	}
+}
+
 UNIT(pop_line_inplace) {
 	SPEC("pops typical lines ending in LF or CRLF") {
 		BoundedString lines = make_bounded_string("first\nsecond\nthird");
@@ -449,6 +471,7 @@ UNIT(free_bounded_string) {
 DRIVER {
 	TEST(bounded_from_streamed_string);
 	TEST(bounded_string_equ);
+	TEST(bounded_string_equ_cstr);
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
 	TEST(pop_delimited_inplace);

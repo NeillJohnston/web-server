@@ -28,6 +28,11 @@ Compare two bounded strings x and y, return true if their data matches.
 Bool bounded_string_equ(BoundedString x, BoundedString y);
 
 /*
+Compare a bounded string x to a C-string y, return whether they are the same string.
+*/
+Bool bounded_string_equ_cstr(BoundedString x, const Char* y);
+
+/*
 "Pop" a line (characters up to the first newline) from a bounded string, by
 modifying the original string to not include the line or newline.
 "Inplace" refers to the fact that no data is copied, the returned line exists
