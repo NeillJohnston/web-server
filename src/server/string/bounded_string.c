@@ -154,6 +154,17 @@ ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) 
 	return 0;
 }
 
+ErrorCode clone_bounded_string_to_cstr(BoundedString source, Char** destination) {
+	Char* final = malloc(source.length + 1);
+	if (final == NULL) return -1;
+
+	memcpy(final, source.data, source.length);
+	final[source.length] = '\0';
+	
+	*destination = final;
+	return 0;
+}
+
 Void free_bounded_string(BoundedString string) {
 	free(string.data);
 }

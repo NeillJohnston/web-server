@@ -94,6 +94,13 @@ Writes back to destination.
 ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination);
 
 /*
+Make a copy of a bounded string, in C-string format.
+Returns -1 if there's a malloc error.
+Writes back to destination.
+*/
+ErrorCode clone_bounded_string_to_cstr(BoundedString source, Char** destination);
+
+/*
 Free the data in a bounded string.
 */
 Void free_bounded_string(BoundedString string);

@@ -8,6 +8,7 @@
 Write a bounded string to a C-string.
 Assumes the C-string has an adequate buffer size to hold both the string and the null-terminator.
 MARK: Not DRY, copied from router.c
+MARK: for refactor, definitely need some bounded/c-string conversion functions lol
 */
 static Void write_bounded_to_cstr(BoundedString string, Char* cstr) {
 	memcpy(cstr, string.data, string.length);
@@ -42,15 +43,12 @@ UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedStrin
 	if (sqlite3_prepare_v2(database, query_cstr, -1, &stmt, NULL)) return 500;
 
 	// Bind URL query params
-	// MARK: shoddy support for "typical" params because I don't intend to use
+	// MARK: shoddy support for "typical" param syntax because I don't intend to use
 	// this for anything like HTML forms
 	for (Int i = 1; i <= sqlite3_bind_parameter_count(stmt); ++i) {
 		BoundedString param = pop_delimited_inplace(&params, ',');
-		
-		Char* param_cstr = malloc(param.length + 1);
-		// MARK: for refactor, definitely need some bounded/c-string conversion functions lol
-		if (param_cstr == NULL) return 500;
-		write_bounded_to_cstr(param, param_cstr);
+		Char* param_cstr;
+		if (clone_bounded_string_to_cstr(param, &param_cstr) != 0) return 500;
 
 		if (sqlite3_bind_text(stmt, i, param_cstr, -1, free) != SQLITE_OK) return 500;
 	}

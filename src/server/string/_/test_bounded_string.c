@@ -451,6 +451,29 @@ UNIT(copy_bounded_string) {
 	}
 }
 
+UNIT(clone_bounded_string_to_cstr) {
+	SPEC("can successfully copy strings") {
+		Char* data = "string data";
+		BoundedString string = make_bounded_string(data);
+		Char* copy;
+
+		if (clone_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		ASSERT(strcmp(data, copy) == 0);
+
+		DONE;
+	}
+	SPEC("can clone strings with weirdly-placed null-terminators") {
+		Char* data = "one\0negative one";
+		BoundedString string = make_bounded_string(data);
+		Char* copy;
+
+		if (clone_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		ASSERT(memcmp(data, copy, string.length) == 0);
+
+		DONE;
+	}
+}
+
 UNIT(free_bounded_string) {
 	SPEC("frees properly") {
 		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
@@ -479,6 +502,7 @@ DRIVER {
 	TEST(append_cstr_inplace);
 	TEST(trim_inplace);
 	TEST(copy_bounded_string);
+	TEST(clone_bounded_string_to_cstr);
 	TEST(free_bounded_string);
 }
 
