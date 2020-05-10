@@ -451,13 +451,13 @@ UNIT(copy_bounded_string) {
 	}
 }
 
-UNIT(clone_bounded_string_to_cstr) {
+UNIT(copy_bounded_string_to_cstr) {
 	SPEC("can successfully copy strings") {
 		Char* data = "string data";
 		BoundedString string = make_bounded_string(data);
 		Char* copy;
 
-		if (clone_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		if (copy_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
 		ASSERT(strcmp(data, copy) == 0);
 
 		DONE;
@@ -467,7 +467,7 @@ UNIT(clone_bounded_string_to_cstr) {
 		BoundedString string = make_bounded_string(data);
 		Char* copy;
 
-		if (clone_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		if (copy_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
 		ASSERT(memcmp(data, copy, string.length) == 0);
 
 		DONE;
@@ -502,7 +502,7 @@ DRIVER {
 	TEST(append_cstr_inplace);
 	TEST(trim_inplace);
 	TEST(copy_bounded_string);
-	TEST(clone_bounded_string_to_cstr);
+	TEST(copy_bounded_string_to_cstr);
 	TEST(free_bounded_string);
 }
 
