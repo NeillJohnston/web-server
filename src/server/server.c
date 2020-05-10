@@ -104,6 +104,10 @@ ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* r
 		write(connection, message, message_length);
 
 		shutdown(connection, SHUT_RDWR);
+
+		free_streamed_string(&streamed_request_string);
+		free_bounded_string(request_string);
+		free_http_request(request);
 	}
 }
 
