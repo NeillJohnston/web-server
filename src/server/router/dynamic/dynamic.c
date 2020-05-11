@@ -39,7 +39,12 @@ UInt route_dynamic(BoundedString root, BoundedString database_path, BoundedStrin
 
 	response->content = get_json(stmt);
 
-	// TODO: needs application/json MIME type
+	// Content type header
+	HttpHeader* header;
+	if (get_http_response_header(CONTENT_TYPE, *response, &header) != 0) return 500;
+
+	BoundedString content_type = { .data = "application/json", .length = 16 };
+	if (copy_bounded_string(content_type, &header->value) != 0) return 500;
 
 	sqlite3_finalize(stmt);
 	sqlite3_close(database);

@@ -64,6 +64,58 @@ UNIT(add_http_header) {
 	}
 }
 
+UNIT(add_blank_http_header) {
+	SPEC("adds blank headers to a response") {
+		HttpResponse response = {
+			.n_headers = 0,
+			.headers = NULL
+		};
+
+		if (add_blank_http_header(CONTENT_TYPE, &response) != 0) LEAVE("could not add header");
+
+		ASSERT(response.n_headers == 1);
+		ASSERT(response.headers[0].name_code == CONTENT_TYPE);
+
+		DONE;
+	}
+}
+
+UNIT(get_http_response_header) {
+	HttpHeader response_headers [2] = {
+		{
+			.name_code = CONTENT_LENGTH,
+			.value = make_bounded_string("10")
+		},
+		{
+			.name_code = CONTENT_TYPE,
+			.value = make_bounded_string("text")
+		}
+	};
+	HttpResponse response = {
+		.n_headers = 2,
+		.headers = response_headers
+	};
+
+	SPEC("gets existing headers") {
+		HttpHeader* content_length;
+		HttpHeader* content_type;
+
+		OKAY(get_http_response_header(CONTENT_LENGTH, response, &content_length));
+		OKAY(get_http_response_header(CONTENT_TYPE, response, &content_type));
+		ASSERT(content_length->value.length == 2);
+		ASSERT(content_type->value.length == 4);
+
+		DONE;
+	}
+	SPEC("errors on nonexistent headers") {
+		HttpHeader* accept;
+
+		ERROR(get_http_response_header(ACCEPT, response, &accept));
+
+		DONE;
+	}
+}
+
 UNIT(make_http_response_string) {
 	SPEC("turns simple responses into strings") {
 		HttpResponse response = {
@@ -166,6 +218,8 @@ UNIT(free_http_response) {
 
 DRIVER {
 	TEST(add_http_header);
+	TEST(add_blank_http_header);
+	TEST(get_http_response_header);
 	TEST(make_http_response_string);
 	TEST(free_http_response);
 }

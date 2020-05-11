@@ -105,27 +105,12 @@ static Void route(BoundedString path, BoundedString params, Int type, ServerConf
 	}
 }
 
-/*
-Test if a path has a given extension.
-*/
-static Bool has_extension(BoundedString path, const Char* extension) {
-	Size i = path.length;
-	Size j = strlen(extension);
-
-	if (j+1 > i) return false;
-
-	while (true) {
-		if (j == 0) return path.data[i-1] == '.';
-		if (path.data[i-1] != extension[j-1]) return false;
-		--i;
-		--j;
-	}
-}
-
 HttpResponse respond(HttpRequest request, ServerConfig config) {
 	Char buffer [PATH_MAX];
 	HttpResponse response = BLANK_RESPONSE;
 	sqlite3* database;
+	
+	if (add_blank_http_header(CONTENT_TYPE, &response) != 0) return make_500();
 
 	const Char* method = METHOD_NAMES[request.method_code];
 	BoundedString params = request.request_uri.uri;
@@ -179,26 +164,9 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 
 	sqlite3_close(database);
 
-	// MARK: For refactor, separate and test this logic
-
-	// Content type header
-	Char* content_type_data = "text/html";
-	if (has_extension(uri, "html")) content_type_data = "text/html";
-	else if (has_extension(uri, "css")) content_type_data = "text/css";
-	else if (has_extension(uri, "js")) content_type_data = "text/js";
-	else if (has_extension(uri, "txt")) content_type_data = "text/plain";
-	BoundedString content_type = {
-		.data = content_type_data,
-		.length = strlen(content_type_data)
-	};
-	if (add_http_header(CONTENT_TYPE, content_type, &response) != 0) return make_500();
-
 	// Content length header
 	sprintf(buffer, "%lu", response.content.length);
-	BoundedString content_length = {
-		.data = buffer,
-		.length = strlen(buffer)
-	};
+	BoundedString content_length = { .data = buffer, .length = strlen(buffer) };
 	if (add_http_header(CONTENT_LENGTH, content_length, &response) != 0) return make_500();
 
 	return response;
