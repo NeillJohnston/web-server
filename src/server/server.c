@@ -128,7 +128,6 @@ Void run_server(ServerConfig config, InternetServer server) {
 
 		SSL* ssl = SSL_new(server.context);
 		if (ssl == NULL) continue;
-
 		if (SSL_set_fd(ssl, connection) != 1) continue;
 
 		SSL_set_accept_state(ssl);
@@ -136,17 +135,17 @@ Void run_server(ServerConfig config, InternetServer server) {
 		if (attempt_ssl_accept != 1) {
 			Int ssl_error = SSL_get_error(ssl, attempt_ssl_accept);
 			printf("SSL error: %d\n", ssl_error);
-			shutdown(connection, 0);
 		}
 
 		Pid worker_pid;
 		if (spawn_worker(ssl, config, &worker_pid) != 0) {
-			SSL_shutdown(ssl);
-			shutdown(connection, 0);
-			continue;
+			printf("Couldn't spawn worker\n");
 		}
 
 		close(connection);
+		SSL_shutdown(ssl);
+
+		SSL_free(ssl);
 	}
 }
 
@@ -166,8 +165,7 @@ Void run_dev_server(ServerConfig config, InternetServer server) {
 
 		Pid worker_pid;
 		if (spawn_dev_worker(connection, config, &worker_pid) != 0) {
-			shutdown(connection, 0);
-			continue;
+			printf("Couldn't spawn worker\n");
 		}
 
 		close(connection);

@@ -25,114 +25,149 @@ static const HttpResponse DEFAULT_RESPONSE = {
 };
 
 /*
-Send a response over SSL.
+Turn a streamed string into an HTTP request.
 */
-static Void send_response(SSL* ssl, HttpResponse response) {
-	BoundedString response_string;
-	// TODO: find out how to handle these two errors gracefully
-	if (make_http_response_string(response, &response_string)) _exit(-1);
-	if (SSL_write(ssl, response_string.data, response_string.length) == -1) _exit(-1);
+static ErrorCode streamed_to_request(StreamedString* streamed_request_string, HttpRequest* request) {
+	BoundedString request_string;
 
-	free_bounded_string(response_string);
+	if (bounded_from_streamed_string(streamed_request_string, &request_string) != 0) return -1;
+	if (parse_http_request(request_string, request) != 0) {
+		free_bounded_string(request_string);
+		return -1;
+	}
+
+	free_bounded_string(request_string);
+
+	return 0;
 }
 
 /*
-Send a response over a socket.
+Receive an HTTP request over HTTPS.
 */
-static Void send_dev_response(Socket connection, HttpResponse response) {
+static ErrorCode recv_ssl_request(SSL* ssl, HttpRequest* request) {
+	StreamedString streamed_request_string;
+
+	if (read_ssl_streamed_string(ssl, &streamed_request_string) != 0) return -1;
+	if (streamed_to_request(&streamed_request_string, request) != 0) {
+		free_streamed_string(&streamed_request_string);
+		return -1;
+	}
+
+	free_streamed_string(&streamed_request_string);
+
+	return 0;
+}
+
+/*
+Receive an HTTP request.
+*/
+static ErrorCode recv_request(Socket connection, HttpRequest* request) {
+	StreamedString request_string;
+
+	if (read_streamed_string(connection, &request_string) != 0) return -1;
+	if (streamed_to_request(&request_string, request) != 0) {
+		free_streamed_string(&request_string);
+		return -1;
+	}
+
+	free_streamed_string(&request_string);
+
+	return 0;
+}
+
+/*
+Send an HTTP response over HTTPS.
+*/
+static ErrorCode send_ssl_response(SSL* ssl, HttpResponse response) {
 	BoundedString response_string;
-	// TODO: find out how to handle these two errors gracefully
-	if (make_http_response_string(response, &response_string) != 0) _exit(-1);
-	if (write(connection, response_string.data, response_string.length) == -1) _exit(-1);
+
+	if (make_http_response_string(response, &response_string)) return -1;
+	if (SSL_write(ssl, response_string.data, response_string.length) == -1) {
+		free_bounded_string(response_string);
+		return -1;
+	}
 
 	free_bounded_string(response_string);
+
+	return 0;
+}
+
+/*
+Send an HTTP response.
+*/
+static ErrorCode send_response(Socket connection, HttpResponse response) {
+	BoundedString response_string;
+
+	if (make_http_response_string(response, &response_string) != 0) return -1;
+	if (write(connection, response_string.data, response_string.length) == -1) {
+		free_bounded_string(response_string);
+		return -1;
+	}
+
+	free_bounded_string(response_string);
+
+	return 0;
 }
 
 /*
 Perform the task of receiving requests and sending responses.
 */
 static Void be_worker(SSL* ssl, ServerConfig config) {
-	// TODO: honor HTTP headers
-	
-	StreamedString streamed_request_string;
-	BoundedString request_string;
 	HttpRequest request;
 
-	if (read_ssl_streamed_string(ssl, &streamed_request_string) != 0) {
-		send_response(ssl, DEFAULT_RESPONSE);
-		_exit(-1);
-	}
-	if (bounded_from_streamed_string(&streamed_request_string, &request_string) != 0) {
-		send_response(ssl, DEFAULT_RESPONSE);
-		_exit(-1);
-	}
-	if (parse_http_request(request_string, &request) != 0) {
-		send_response(ssl, DEFAULT_RESPONSE);
-		_exit(-1);
+	// TODO: honor Keep-Alive, maybe some other headers
+	if (recv_ssl_request(ssl, &request) != 0) {
+		send_ssl_response(ssl, DEFAULT_RESPONSE);
+		return;
 	}
 
-	printf("%s %.*s\n", METHOD_NAMES[request.method_code], (int) request.request_uri.uri.length, request.request_uri.uri.data);
+	printf("%s %.*s\n",
+		METHOD_NAMES[request.method_code],
+		(Int) request.request_uri.uri.length, request.request_uri.uri.data
+	);
 
 	HttpResponse response = respond(request, config);
-	send_response(ssl, response);
+	send_ssl_response(ssl, response);
 	
 	SSL_shutdown(ssl);
 
-	free_streamed_string(&streamed_request_string);
-	free_bounded_string(request_string);
 	free_http_request(request);
 	free_http_response(response);
 	SSL_free(ssl);
-
-	_exit(0);
 }
 
 /*
 Perform the task of receiving requests and sending responses, for the dev server.
 */
 static Void be_dev_worker(Socket connection, ServerConfig config) {
-	// MARK: for refactor, most of this logic can be offloaded to another function
-	
-	StreamedString streamed_request_string;
-	BoundedString request_string;
 	HttpRequest request;
 
-	if (read_streamed_string(connection, &streamed_request_string) != 0) {
-		send_dev_response(connection, DEFAULT_RESPONSE);
-		_exit(-1);
-	}
-	if (bounded_from_streamed_string(&streamed_request_string, &request_string) != 0) {
-		send_dev_response(connection, DEFAULT_RESPONSE);
-		_exit(-1);
-	}
-	if (parse_http_request(request_string, &request) != 0) {
-		send_dev_response(connection, DEFAULT_RESPONSE);
-		_exit(-1);
+	if (recv_request(connection, &request) != 0) {
+		send_response(connection, DEFAULT_RESPONSE);
+		return;
 	}
 
-	printf("dev: %s %.*s\n", METHOD_NAMES[request.method_code], (int) request.request_uri.uri.length, request.request_uri.uri.data);
+	printf("%s %.*s\n",
+		METHOD_NAMES[request.method_code],
+		(Int) request.request_uri.uri.length, request.request_uri.uri.data
+	);
 
 	HttpResponse response = respond(request, config);
-	send_dev_response(connection, response);
+	send_response(connection, response);
 
-	shutdown(connection, SHUT_RDWR);
+	close(connection);
 
-	free_streamed_string(&streamed_request_string);
-	free_bounded_string(request_string);
 	free_http_request(request);
 	free_http_response(response);
-
-	_exit(0);
 }
 
 ErrorCode spawn_worker(SSL* ssl, ServerConfig config, Pid* worker_pid) {
-	const Pid INVALID = -1;
-
 	Pid forked = fork();
 	
-	if (forked == INVALID) return -1;
+	if (forked == (Pid) -1) return -1;
 	else if (forked == 0) {
 		be_worker(ssl, config);
+		_exit(0);
 	}
 	else {
 		*worker_pid = forked;
@@ -142,13 +177,12 @@ ErrorCode spawn_worker(SSL* ssl, ServerConfig config, Pid* worker_pid) {
 }
 
 ErrorCode spawn_dev_worker(Socket connection, ServerConfig config, Pid* worker_pid) {
-	const Pid INVALID = -1;
-
 	Pid forked = fork();
 
-	if (forked == INVALID) return -1;
+	if (forked == (Pid) -1) return -1;
 	else if (forked == 0) {
 		be_dev_worker(connection, config);
+		_exit(0);
 	}
 	else {
 		*worker_pid = forked;
