@@ -131,18 +131,27 @@ Void run_server(ServerConfig config, InternetServer server) {
 		Int attempt_ssl_accept = SSL_accept(ssl);
 		if (attempt_ssl_accept != 1) {
 			Int ssl_error = SSL_get_error(ssl, attempt_ssl_accept);
-			printf("SSL error: %d\n", ssl_error);
-			shutdown(connection, 0);
+
+			// Unrecoverable + do not call SSL_shutdown
+			if (ssl_error == SSL_ERROR_SSL || ssl_error == SSL_ERROR_SYSCALL) {
+				SSL_free(ssl);
+				continue;
+			}
 		}
 
 		Pid worker_pid;
-		if (spawn_worker(ssl, config, &worker_pid) != 0) {
-			SSL_shutdown(ssl);
-			shutdown(connection, 0);
-			continue;
-		}
+		// MARK: Ignored return value, but I believe nothing different has to
+		// happen
+		spawn_worker(ssl, config, &worker_pid);
 
+		SSL_shutdown(ssl);
 		close(connection);
+
+		// Note to self because I keep questioning this logic - the spawned
+		// process has its own heap, so freeing in here is safe and actually
+		// clears a memory leak
+		SSL_free(ssl);
+		// Can't believe I'm going to be PMing for OS next semester
 	}
 }
 

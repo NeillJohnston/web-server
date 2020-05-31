@@ -31,7 +31,7 @@ static Void send_response(SSL* ssl, HttpResponse response) {
 	BoundedString response_string;
 	// TODO: find out how to handle these two errors gracefully
 	if (make_http_response_string(response, &response_string)) _exit(-1);
-	if (SSL_write(ssl, response_string.data, response_string.length) == -1) _exit(-1);
+	if (SSL_write(ssl, response_string.data, response_string.length) <= 0) _exit(-1);
 
 	free_bounded_string(response_string);
 }
@@ -58,10 +58,15 @@ static Void be_worker(SSL* ssl, ServerConfig config) {
 	BoundedString request_string;
 	HttpRequest request;
 
-	if (read_ssl_streamed_string(ssl, &streamed_request_string) != 0) {
+	ErrorCode attempt_read = read_ssl_streamed_string(ssl, &streamed_request_string);
+	if (attempt_read == ERROR_INVALIDATED_SSL) {
+		_exit(-1);
+	}
+	else if (attempt_read != 0) {
 		send_response(ssl, DEFAULT_RESPONSE);
 		_exit(-1);
 	}
+
 	if (bounded_from_streamed_string(&streamed_request_string, &request_string) != 0) {
 		send_response(ssl, DEFAULT_RESPONSE);
 		_exit(-1);

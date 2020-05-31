@@ -44,11 +44,16 @@ ErrorCode read_ssl_streamed_string(SSL* ssl, StreamedString* string) {
 
 	while (true) {
 		current->next = NULL;
-		Size n_bytes;
-		if (SSL_read_ex(ssl, current->data, data_size, &n_bytes) != 1) {
+		Int attempt_read = SSL_read(ssl, current->data, data_size);
+		if (attempt_read <= 0) {
 			free_streamed_string(string);
-			return -1;
+
+			Int ssl_error = SSL_get_error(ssl, attempt_read);
+			if (ssl_error == SSL_ERROR_SSL || ssl_error == SSL_ERROR_SYSCALL) return ERROR_INVALIDATED_SSL;
+			else return -1;
 		}
+		
+		Size n_bytes = attempt_read;
 
 		if (n_bytes < data_size) {
 			current->size = n_bytes;

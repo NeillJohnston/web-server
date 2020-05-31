@@ -5,6 +5,8 @@
 #include <openssl/ssl.h>
 #include <unistd.h>
 
+static const ErrorCode ERROR_INVALIDATED_SSL = 1;
+
 // Must be a multiple of 8 due to struct packing
 #define NODE_SIZE (0x1000)
 
