@@ -115,6 +115,19 @@ Copies the given value.
 ErrorCode add_http_header(enum HeaderNameCode name_code, BoundedString value, HttpResponse* response);
 
 /*
+Add a header with an uninitialized value to an HTTP response object.
+*/
+ErrorCode add_blank_http_header(enum HeaderNameCode name_code, HttpResponse* response);
+
+/*
+Get a pointer to a header with the specified name code from an HTTP response.
+Errors if the requested header does not exist.
+
+Writes the pointer back to header.
+*/
+ErrorCode get_http_response_header(enum HeaderNameCode name_code, HttpResponse response, HttpHeader** header);
+
+/*
 Turn a structured HTTP response into a raw response string.
 Writes back to response_string.
 

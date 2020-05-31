@@ -7,15 +7,6 @@
 #include <string.h>
 
 /*
-Compare a bounded string and a C-style string.
-MARK: I've copied this function like a million times, fix when refactoring
-*/
-static Bool bounded_equ_cstr(BoundedString bounded, const Char* cstr) {
-	if (bounded.length != strlen(cstr)) return false;
-	return memcmp(bounded.data, cstr, bounded.length) == 0;
-}
-
-/*
 Turn a string into a method code.
 */
 static ErrorCode parse_method(BoundedString method, enum MethodCode* method_code) {
@@ -23,7 +14,7 @@ static ErrorCode parse_method(BoundedString method, enum MethodCode* method_code
 	// Might be worth it to include dummy iterator values in the enum:
 	// for (enum MethodCode i = METHOD_CODE_FIRST+1; i != METHOD_CODE_LAST; ++i)
 	for (enum MethodCode i = GET; i <= CONNECT; ++i) {
-		if (bounded_equ_cstr(method, METHOD_NAMES[i])) {
+		if (bounded_string_equ_cstr(method, METHOD_NAMES[i])) {
 			*method_code = i;
 			return 0;
 		}
@@ -46,7 +37,7 @@ static ErrorCode parse_request_line(BoundedString* request_string, HttpRequest* 
 
 	if (parse_method(method, &request->method_code) != 0) return -1;
 
-	if (bounded_equ_cstr(uri, "*"))
+	if (bounded_string_equ_cstr(uri, "*"))
 		request->request_uri.type = ASTERISK;
 	else if (uri.data[0] == '/')
 		request->request_uri.type = ABS_PATH;
@@ -66,7 +57,7 @@ Turn a string into a header name code.
 */
 static ErrorCode parse_header_name(BoundedString header_name, enum HeaderNameCode* header_name_code) {
 	for (enum HeaderNameCode i = ITER_HEADER_NAME_CODES+1; i != END_HEADER_NAME_CODES; ++i) {
-		if (bounded_equ_cstr(header_name, HEADER_NAMES[i])) {
+		if (bounded_string_equ_cstr(header_name, HEADER_NAMES[i])) {
 			*header_name_code = i;
 			return 0;
 		}

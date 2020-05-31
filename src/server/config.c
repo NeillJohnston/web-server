@@ -27,15 +27,6 @@ static const Char* VALUE_TRUE = "true";
 static const Char* VALUE_FALSE = "false";
 
 /*
-Return whether a BoundedString is equal to a C-string.
-*/
-static Bool bounded_equ_cstr(BoundedString bounded, const Char* cstr) {
-	if (bounded.length != strlen(cstr)) return false;
-	
-	return memcmp(bounded.data, cstr, bounded.length) == 0;
-}
-
-/*
 Unset the given flag in a mask.
 */
 static Flags unset(Flags mask, Flags flag) {
@@ -67,38 +58,38 @@ ErrorCode parse_config(Char* path, ServerConfig* config) {
 		if (key.length == 0) continue;
 		else if (key.data[0] == '#') continue;
 
-		if (bounded_equ_cstr(key, KEY_ROOT)) {
+		if (bounded_string_equ_cstr(key, KEY_ROOT)) {
 			if (copy_bounded_string(value, &config->root) != 0) return -1;
 			required = unset(required, FLAG_ROOT);
 		}
-		else if (bounded_equ_cstr(key, KEY_DB_PATH)) {
+		else if (bounded_string_equ_cstr(key, KEY_DB_PATH)) {
 			if (copy_bounded_string(value, &config->db_path) != 0) return -1;
 			required = unset(required, FLAG_DB_PATH);
 		}
-		else if (bounded_equ_cstr(key, KEY_CERT_PATH)) {
+		else if (bounded_string_equ_cstr(key, KEY_CERT_PATH)) {
 			if (copy_bounded_string(value, &config->cert_path) != 0) return -1;
 			required = unset(required, FLAG_CERT_PATH);
 		}
-		else if (bounded_equ_cstr(key, KEY_PKEY_PATH)) {
+		else if (bounded_string_equ_cstr(key, KEY_PKEY_PATH)) {
 			if (copy_bounded_string(value, &config->pkey_path) != 0) return -1;
 			required = unset(required, FLAG_PKEY_PATH);
 		}
-		else if (bounded_equ_cstr(key, KEY_DOMAIN)) {
+		else if (bounded_string_equ_cstr(key, KEY_DOMAIN)) {
 			if (copy_bounded_string(value, &config->domain) != 0) return -1;
 			required = unset(required, FLAG_DOMAIN);
 		}
-		else if (bounded_equ_cstr(key, KEY_PORT)) {
+		else if (bounded_string_equ_cstr(key, KEY_PORT)) {
 			if (sscanf(value.data, "%hu", &config->port) == 0) return ERROR_BAD_CONFIG_VALUE;
 		}
-		else if (bounded_equ_cstr(key, KEY_BACKLOG)) {
+		else if (bounded_string_equ_cstr(key, KEY_BACKLOG)) {
 			if (sscanf(value.data, "%d", &config->backlog) == 0) return ERROR_BAD_CONFIG_VALUE;
 		}
-		else if (bounded_equ_cstr(key, KEY_DEV)) {
-			if (bounded_equ_cstr(value, VALUE_TRUE)) {
+		else if (bounded_string_equ_cstr(key, KEY_DEV)) {
+			if (bounded_string_equ_cstr(value, VALUE_TRUE)) {
 				config->dev = true;
 				required = unset(required, dev_unrequired);
 			}
-			else if (bounded_equ_cstr(value, VALUE_FALSE)) {
+			else if (bounded_string_equ_cstr(value, VALUE_FALSE)) {
 				config->dev = false;
 			}
 			else {

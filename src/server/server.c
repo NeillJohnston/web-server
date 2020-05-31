@@ -104,6 +104,10 @@ ErrorCode run_redirect_server(ServerConfig config, InternetServer server, Pid* r
 		write(connection, message, message_length);
 
 		shutdown(connection, SHUT_RDWR);
+
+		free_streamed_string(&streamed_request_string);
+		free_bounded_string(request_string);
+		free_http_request(request);
 	}
 }
 
@@ -124,7 +128,6 @@ Void run_server(ServerConfig config, InternetServer server) {
 
 		SSL* ssl = SSL_new(server.context);
 		if (ssl == NULL) continue;
-
 		if (SSL_set_fd(ssl, connection) != 1) continue;
 
 		SSL_set_accept_state(ssl);
@@ -140,9 +143,9 @@ Void run_server(ServerConfig config, InternetServer server) {
 		}
 
 		Pid worker_pid;
-		// MARK: Ignored return value, but I believe nothing different has to
-		// happen
-		spawn_worker(ssl, config, &worker_pid);
+		if (spawn_worker(ssl, config, &worker_pid) != 0) {
+			printf("Couldn't spawn worker\n");
+		}
 
 		SSL_shutdown(ssl);
 		close(connection);
@@ -171,8 +174,7 @@ Void run_dev_server(ServerConfig config, InternetServer server) {
 
 		Pid worker_pid;
 		if (spawn_dev_worker(connection, config, &worker_pid) != 0) {
-			shutdown(connection, 0);
-			continue;
+			printf("Couldn't spawn worker\n");
 		}
 
 		close(connection);

@@ -28,6 +28,11 @@ Compare two bounded strings x and y, return true if their data matches.
 Bool bounded_string_equ(BoundedString x, BoundedString y);
 
 /*
+Compare a bounded string x to a C-string y, return whether they are the same string.
+*/
+Bool bounded_string_equ_cstr(BoundedString x, const Char* y);
+
+/*
 "Pop" a line (characters up to the first newline) from a bounded string, by
 modifying the original string to not include the line or newline.
 "Inplace" refers to the fact that no data is copied, the returned line exists
@@ -87,6 +92,13 @@ Returns -1 if there's an error with malloc.
 Writes back to destination.
 */
 ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination);
+
+/*
+Make a copy of a bounded string, in C-string format.
+Returns -1 if there's a malloc error.
+Writes back to destination.
+*/
+ErrorCode copy_bounded_string_to_cstr(BoundedString source, Char** destination);
 
 /*
 Free the data in a bounded string.

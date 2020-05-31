@@ -120,6 +120,28 @@ UNIT(bounded_string_equ) {
 	}
 }
 
+UNIT(bounded_string_equ_cstr) {
+	SPEC("compares strings properly") {
+		Char* cstr1 = "hello";
+		BoundedString bounded1 = make_bounded_string(cstr1);
+		ASSERT(bounded_string_equ_cstr(bounded1, cstr1));
+
+		Char* cstr2 = "test\n";
+		BoundedString bounded2 = {
+			.data = "test\ngarbage",
+			.length = 5
+		};
+		ASSERT(bounded_string_equ_cstr(bounded2, cstr2));
+
+		// Fail case
+		Char* cstr3 = "failure";
+		BoundedString bounded3 = make_bounded_string("fail");
+		ASSERT(bounded_string_equ_cstr(bounded3, cstr3) == false);
+
+		DONE;
+	}
+}
+
 UNIT(pop_line_inplace) {
 	SPEC("pops typical lines ending in LF or CRLF") {
 		BoundedString lines = make_bounded_string("first\nsecond\nthird");
@@ -429,6 +451,29 @@ UNIT(copy_bounded_string) {
 	}
 }
 
+UNIT(copy_bounded_string_to_cstr) {
+	SPEC("can successfully copy strings") {
+		Char* data = "string data";
+		BoundedString string = make_bounded_string(data);
+		Char* copy;
+
+		if (copy_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		ASSERT(strcmp(data, copy) == 0);
+
+		DONE;
+	}
+	SPEC("can clone strings with weirdly-placed null-terminators") {
+		Char* data = "one\0negative one";
+		BoundedString string = make_bounded_string(data);
+		Char* copy;
+
+		if (copy_bounded_string_to_cstr(string, &copy) != 0) LEAVE("could not clone string");
+		ASSERT(memcmp(data, copy, string.length) == 0);
+
+		DONE;
+	}
+}
+
 UNIT(free_bounded_string) {
 	SPEC("frees properly") {
 		FileDescriptor file = open("src/server/string/_/4098B.txt", O_RDONLY);
@@ -449,6 +494,7 @@ UNIT(free_bounded_string) {
 DRIVER {
 	TEST(bounded_from_streamed_string);
 	TEST(bounded_string_equ);
+	TEST(bounded_string_equ_cstr);
 	TEST(pop_line_inplace);
 	TEST(pop_token_inplace);
 	TEST(pop_delimited_inplace);
@@ -456,6 +502,7 @@ DRIVER {
 	TEST(append_cstr_inplace);
 	TEST(trim_inplace);
 	TEST(copy_bounded_string);
+	TEST(copy_bounded_string_to_cstr);
 	TEST(free_bounded_string);
 }
 

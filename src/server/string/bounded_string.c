@@ -34,6 +34,11 @@ Bool bounded_string_equ(BoundedString x, BoundedString y) {
 	return memcmp(x.data, y.data, x.length) == 0;
 }
 
+Bool bounded_string_equ_cstr(BoundedString x, const Char* y) {
+	if (x.length != strlen(y)) return false;
+	return memcmp(x.data, y, x.length) == 0;
+}
+
 BoundedString pop_line_inplace(BoundedString* string) {
 	BoundedString line = {
 		.data = string->data
@@ -146,6 +151,17 @@ ErrorCode copy_bounded_string(BoundedString source, BoundedString* destination) 
 
 	memcpy(destination->data, source.data, source.length);
 
+	return 0;
+}
+
+ErrorCode copy_bounded_string_to_cstr(BoundedString source, Char** destination) {
+	Char* final = malloc(source.length + 1);
+	if (final == NULL) return -1;
+
+	memcpy(final, source.data, source.length);
+	final[source.length] = '\0';
+	
+	*destination = final;
 	return 0;
 }
 

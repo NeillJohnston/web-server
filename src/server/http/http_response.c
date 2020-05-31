@@ -6,20 +6,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-ErrorCode add_http_header(enum HeaderNameCode name_code, BoundedString value, HttpResponse* response) {
-	++response->n_headers;
-	response->headers = realloc(response->headers, response->n_headers * sizeof(HttpHeader));
-	if (response->headers == NULL) return -1;
-	HttpHeader* header = &response->headers[response->n_headers-1];
+/*
+Add a new header to a list of headers.
 
-	header->name_code = name_code;
-	header->value.data = malloc(value.length);
-	header->value.length = value.length;
-	if (header->value.data == NULL) return -1;
+Writes back the added header to new_header.
+*/
+static ErrorCode add_new_header(HttpHeader** headers, Size* n_headers, HttpHeader** new_header) {
+	++(*n_headers);
+	*headers = realloc(*headers, *n_headers * sizeof(HttpHeader));
+	if (*headers == NULL) return -1;
 
-	memcpy(header->value.data, value.data, value.length);
+	*new_header = &((*headers)[(*n_headers)-1]);
 
 	return 0;
+}
+
+ErrorCode add_http_header(enum HeaderNameCode name_code, BoundedString value, HttpResponse* response) {
+	HttpHeader* header;
+	if (add_new_header(&response->headers, &response->n_headers, &header) != 0) return -1;
+
+	header->name_code = name_code;
+	if (copy_bounded_string(value, &header->value) != 0) return -1;
+
+	return 0;
+}
+
+ErrorCode add_blank_http_header(enum HeaderNameCode name_code, HttpResponse* response) {
+	HttpHeader* header;
+	if (add_new_header(&response->headers, &response->n_headers, &header) != 0) return -1;
+
+	header->name_code = name_code;
+
+	return 0;
+}
+
+ErrorCode get_http_response_header(enum HeaderNameCode name_code, HttpResponse response, HttpHeader** header) {
+	for (Size i = 0; i < response.n_headers; ++i) {
+		HttpHeader* current = &response.headers[i];
+		if (current->name_code == name_code) {
+			*header = current;
+			return 0;
+		}
+	}
+	
+	return -1;
 }
 
 ErrorCode make_http_response_string(HttpResponse response, BoundedString* response_string) {
@@ -28,7 +58,7 @@ ErrorCode make_http_response_string(HttpResponse response, BoundedString* respon
 	// Find out about how much space we need so we can malloc first
 	// No need to be stingy with our bytes, so the quick estimate formula:
 	// 1KB + |status_message| + sum(|header|) + |content|
-	// MARK: just in case the above changes and we need to be stingy
+	// MARK: leaving a mark here just in case the above changes and we need to be stingy
 	Size length = 1024;
 	length += strlen(status_message);
 	for (Size i = 0; i < response.n_headers; ++i)

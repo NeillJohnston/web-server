@@ -16,14 +16,12 @@
 
 /*
 SQL query to find a route with a given method/route in the database.
-MAGIC, but it's genuinely an okay way to do things this time.
 */
 static const Char* FIND_ROUTE =
 "select * from routes where method = ? and route = ?;";
 
 /*
 SQL query to find an error route.
-MAGIC, but it's genuinely an okay way to do things this time.
 */
 static const Char* FIND_ERROR_ROUTE =
 "select * from routes where method = \"ERROR\" and route = ?;";
@@ -32,7 +30,7 @@ static const Char* FIND_ERROR_ROUTE =
 Default blank response, importantly has all pointers NULL so that free
 can be called without error.
 */
-static const HttpResponse BLANK_RESPONSE = {
+static const HttpResponse RESPONSE_500 = {
 	.version = {
 		.major = 1,
 		.minor = 1
@@ -45,22 +43,6 @@ static const HttpResponse BLANK_RESPONSE = {
 		.length = 0
 	}
 };
-
-/*
-Make a default 500 response.
-*/
-static HttpResponse make_500() {
-	const Char* content = "Internal Error";
-	const Size content_length = strlen(content);
-	HttpResponse response = BLANK_RESPONSE;
-
-	// Have to dynamically allocate this string so that free can be called
-	// "Rain or shine," make sure something useful can be returned here
-	response.content.data = malloc(content_length);
-	response.content.length = response.content.data == NULL ? 0 : content_length;
-
-	return response;
-}
 
 /*
 Write a bounded string to a C-string.
@@ -82,8 +64,7 @@ static Int first_row(sqlite3_stmt* statement) {
 }
 
 /*
-Read the important (result) columns from a row in the routes table.
-Assumes that the return code of sqlite3_step has been checked befre calling.
+Read the data (path/type) columns from a row in the routes table.
 */
 static Void read_routes_row(sqlite3_stmt* statement, BoundedString* path, Int* type) {
 	const unsigned char* path_data = sqlite3_column_text(statement, 2);
@@ -106,40 +87,25 @@ static Void route(BoundedString path, BoundedString params, Int type, ServerConf
 	}
 }
 
-/*
-Test if a path has a given extension.
-*/
-static Bool has_extension(BoundedString path, const Char* extension) {
-	Size i = path.length;
-	Size j = strlen(extension);
-
-	if (j+1 > i) return false;
-
-	while (true) {
-		if (j == 0) return path.data[i-1] == '.';
-		if (path.data[i-1] != extension[j-1]) return false;
-		--i;
-		--j;
-	}
-}
-
 HttpResponse respond(HttpRequest request, ServerConfig config) {
 	Char buffer [PATH_MAX];
-	HttpResponse response = BLANK_RESPONSE;
+	HttpResponse response = RESPONSE_500;
 	sqlite3* database;
+	
+	if (add_blank_http_header(CONTENT_TYPE, &response) != 0) return RESPONSE_500;
 
 	const Char* method = METHOD_NAMES[request.method_code];
 	BoundedString params = request.request_uri.uri;
 	BoundedString uri = pop_delimited_inplace(&params, '?');
 
 	write_bounded_to_cstr(config.db_path, buffer);
-	if (sqlite3_open(buffer, &database) != 0) return make_500();
+	if (sqlite3_open(buffer, &database) != 0) return RESPONSE_500;
 
 	write_bounded_to_cstr(uri, buffer);
 	sqlite3_stmt* find_route;
-	if (sqlite3_prepare_v2(database, FIND_ROUTE, -1, &find_route, NULL) != 0) return make_500();
-	if (sqlite3_bind_text(find_route, 1, method, -1, SQLITE_STATIC) != 0) return make_500();
-	if (sqlite3_bind_text(find_route, 2, uri.data, uri.length, SQLITE_STATIC) != 0) return make_500();
+	if (sqlite3_prepare_v2(database, FIND_ROUTE, -1, &find_route, NULL) != 0) return RESPONSE_500;
+	if (sqlite3_bind_text(find_route, 1, method, -1, SQLITE_STATIC) != 0) return RESPONSE_500;
+	if (sqlite3_bind_text(find_route, 2, uri.data, uri.length, SQLITE_STATIC) != 0) return RESPONSE_500;
 	
 	if (first_row(find_route) == SQLITE_ROW) {
 		Char path_data [PATH_MAX];
@@ -161,8 +127,8 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 		sprintf(buffer, "%u", response.status_code);
 
 		sqlite3_stmt* find_error_route;
-		if (sqlite3_prepare_v2(database, FIND_ERROR_ROUTE, -1, &find_error_route, NULL) != 0) return make_500();
-		if (sqlite3_bind_text(find_error_route, 1, buffer, -1, SQLITE_STATIC) != 0) return make_500();
+		if (sqlite3_prepare_v2(database, FIND_ERROR_ROUTE, -1, &find_error_route, NULL) != 0) return RESPONSE_500;
+		if (sqlite3_bind_text(find_error_route, 1, buffer, -1, SQLITE_STATIC) != 0) return RESPONSE_500;
 		
 		if (first_row(find_error_route) == SQLITE_ROW) {
 			Char path_data [PATH_MAX];
@@ -180,27 +146,10 @@ HttpResponse respond(HttpRequest request, ServerConfig config) {
 
 	sqlite3_close(database);
 
-	// MARK: For refactor, separate and test this logic
-
-	// Content type header
-	Char* content_type_data = "text/html";
-	if (has_extension(uri, "html")) content_type_data = "text/html";
-	else if (has_extension(uri, "css")) content_type_data = "text/css";
-	else if (has_extension(uri, "js")) content_type_data = "text/js";
-	else if (has_extension(uri, "txt")) content_type_data = "text/plain";
-	BoundedString content_type = {
-		.data = content_type_data,
-		.length = strlen(content_type_data)
-	};
-	if (add_http_header(CONTENT_TYPE, content_type, &response) != 0) return make_500();
-
 	// Content length header
 	sprintf(buffer, "%lu", response.content.length);
-	BoundedString content_length = {
-		.data = buffer,
-		.length = strlen(buffer)
-	};
-	if (add_http_header(CONTENT_LENGTH, content_length, &response) != 0) return make_500();
+	BoundedString content_length = { .data = buffer, .length = strlen(buffer) };
+	if (add_http_header(CONTENT_LENGTH, content_length, &response) != 0) return RESPONSE_500;
 
 	return response;
 }
