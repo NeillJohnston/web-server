@@ -83,8 +83,8 @@ Send an HTTP response over HTTPS.
 static ErrorCode send_ssl_response(SSL* ssl, HttpResponse response) {
 	BoundedString response_string;
 
-	if (make_http_response_string(response, &response_string)) return -1;
-	if (SSL_write(ssl, response_string.data, response_string.length) == -1) {
+	if (make_http_response_string(response, &response_string) != 0) return -1;
+	if (SSL_write(ssl, response_string.data, response_string.length) <= 0) {
 		free_bounded_string(response_string);
 		return -1;
 	}
@@ -131,6 +131,7 @@ static Void be_worker(SSL* ssl, ServerConfig config) {
 		return;
 	}
 
+	// Log the request
 	printf("%s %.*s\n",
 		METHOD_NAMES[request.method_code],
 		(Int) request.request_uri.uri.length, request.request_uri.uri.data
@@ -139,7 +140,16 @@ static Void be_worker(SSL* ssl, ServerConfig config) {
 	HttpResponse response = respond(request, config);
 	send_ssl_response(ssl, response);
 	
-	SSL_shutdown(ssl);
+	Int attempt_shutdown = SSL_shutdown(ssl);
+	if (attempt_shutdown == 0) {
+		// Completes the bidirectional shutdown
+		Char buffer [1024];
+		SSL_read(ssl, buffer, 1024);
+	}
+	else if (attempt_shutdown != 1) {
+		Int ssl_error = SSL_get_error(ssl, attempt_shutdown);
+		printf("SSL error (@be_worker) %d\n", ssl_error);
+	}
 
 	free_http_request(request);
 	free_http_response(response);
@@ -157,6 +167,7 @@ static Void be_dev_worker(Socket connection, ServerConfig config) {
 		return;
 	}
 
+	// Log the request
 	printf("%s %.*s\n",
 		METHOD_NAMES[request.method_code],
 		(Int) request.request_uri.uri.length, request.request_uri.uri.data

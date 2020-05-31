@@ -147,7 +147,6 @@ Void run_server(ServerConfig config, InternetServer server) {
 			printf("Couldn't spawn worker\n");
 		}
 
-		SSL_shutdown(ssl);
 		close(connection);
 
 		// Note to self because I keep questioning this logic - the spawned
